@@ -13,18 +13,18 @@ sigmas = [1, 1, 1, 2]';                                                 %signal 
 %Clutter Parameters--------------------------------------------------
 Rng_span = [2000 2100];                                                 %Range span for clutter
 V_mean = 0;                                                             %Normal mean for velocity distibution of clutter sources
-V_std = 100;                                                             %Standard Dev for velocity distibution of clutter sources
-scale_ctr = 1;                                                          %Normal mean for scale value of wiebull dist
-scale_std = .1;                                                         %Standard Dev for scale value of wiebull dist
-shape_ctr = .5;                                                         %Normal mean for shape value of wiebull dist
-shape_std = .02;                                                        %Standard Dev for shape value of wiebull dist
-dist_density = .8;                                                      %Density of wiebull sources per m in Rng_span
-amples_mean = 100;                                                      %Normal mean for num of samples in a clutter source
-samples_std = 20;                                                       %Standard Dev for num of samples in a clutter source
-sigma_power = 1;                                                        %Average power for the clutter distribution
+V_std = 50;                                                             %Standard Dev for velocity distibution of clutter sources
+scale_ctr = 1;                                                          %Normal mean for scale value of wibble dist
+scale_std = .1;                                                         %Standard Dev for scale value of wibble dist
+shape_ctr = .5;
+shape_std = .02;
+dist_num = 100;
+samples_mean = 100;
+samples_std = 8;
+sigma_power = .1;
 
 [clutter_rng, clutter_vel, clutter_sig] = clutter_wbl(Rng_span, V_mean, V_std, scale_ctr,scale_std,...
-    shape_ctr, shape_std, dist_density, samples_mean, samples_std, sigma_power);
+    shape_ctr, shape_std, dist_num, samples_mean, samples_std, sigma_power);
 
 R_targets = [R_targets;clutter_rng];
 v_targets = [v_targets;clutter_vel];
@@ -352,9 +352,9 @@ function [interp_data] = sinc_interpolation(data,m,m_scaled)            %Sinc in
 end
 
 function [Range,Velocity,Sigma] = clutter_wbl(Rng_span, V_mean, V_std, scale_ctr,scale_std,...
-    shape_ctr, shape_std, dist_density, samples_mean, samples_std, sigma_power)
+    shape_ctr, shape_std, dist_num, samples_mean, samples_std, sigma_power)
     
-    dist_num = round((Rng_span(2)-Rng_span(1)).*dist_density);
+    
     source_centers = (Rng_span(2)-Rng_span(1))*rand(dist_num,1) + Rng_span(1);
     Range = [];
     Velocity = [];
