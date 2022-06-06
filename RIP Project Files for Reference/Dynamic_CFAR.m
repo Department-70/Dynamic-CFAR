@@ -244,10 +244,9 @@ hold on;
 rectangle('Position',[v_targets(target)-v_res/2,(R_targets(target)-R_res/2)*1e-3,v_res,(R_res)*1e-3])
 
 %%
-detections_ind = CA_CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],2,3,1e-2, true); %Cell averaging CFAR
-detections_ind = OS_CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],0,5,80,1e-2,true); %Order statistics CFAR
 detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'k',80,'Tband',8,'Type','OS'); %Order statistics CFAR
 detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'Gband',2,'Tband',3,'Type','CA'); %Cell Averaging CFAR
+
 %%
 function [detections_ind] = CFAR(RDM,varargin)
     defaultTband = 5;
@@ -290,52 +289,6 @@ function [detections_ind] = CFAR(RDM,varargin)
         helperDetectionsMap(RDM_map,p.Results.R_axis',p.Results.V_axis,rangeIndx,dopplerIndx,detections)
         xlim(p.Results.V_window)
         ylim(p.Results.R_window)
-        xlabel('Velocity (m/s)')
-    end
-end
-
-function [detections_ind] = CA_CFAR(RDM, R_axis, V_axis, R_window, V_window,Gband, Tband, PFA, plot)
-    RDM_map = abs(RDM);                                                     %Ensure RDM is Real
-    cfar = phased.CFARDetector2D('Method','CA','GuardBandSize',Gband,'TrainingBandSize',Tband,... %set-up CFAR Detector
-      'ProbabilityFalseAlarm',PFA)
-    R_window(1) = max(min(R_axis)+Tband+Gband,R_window(1));                 %Ensure CUTs are far enough from edge
-    R_window(2) = min(max(R_axis)-Tband-Gband,R_window(2));
-    V_window(1) = max(min(V_axis)+Tband+Gband,V_window(1));
-    V_window(2) = min(max(V_axis)-Tband-Gband,V_window(2));
-    [~,rangeIndx] = min(abs(R_axis'-R_window));                             %Calulate range of CUTs
-    [~,dopplerIndx] = min(abs(V_axis-V_window));
-    [columnInds,rowInds] = meshgrid(dopplerIndx(1):dopplerIndx(2),...       %create Mesh grid for all CUTs locations
-      rangeIndx(1):rangeIndx(2));
-    CUTIdx = [rowInds(:) columnInds(:)]';                                   %Create CUTs index list
-    detections = cfar(RDM_map,CUTIdx);                                      %Preform CA-CFAR and return detection locations
-    detections_ind = CUTIdx(:,detections==1);                               %List detection index pairs
-    if plot                                                                 %If plot flag is true, plot detection map
-        helperDetectionsMap(RDM_map,R_axis',V_axis,rangeIndx,dopplerIndx,detections)
-        xlim(V_window)
-        ylim(R_window)
-        xlabel('Velocity (m/s)')
-    end
-end
-
-function [detections_ind] = OS_CFAR(RDM, R_axis, V_axis, R_window, V_window,Gband, Tband, k, PFA, plot)
-    RDM_map = abs(RDM);                                                     %Ensure RDM is Real
-    cfar = phased.CFARDetector2D('Method','OS','GuardBandSize',Gband,'TrainingBandSize',Tband,... %set-up CFAR Detector
-      'Rank',k,'ProbabilityFalseAlarm',PFA)
-    R_window(1) = max(min(R_axis)+Tband+Gband,R_window(1));                 %Ensure CUTs are far enough from edge
-    R_window(2) = min(max(R_axis)-Tband-Gband,R_window(2));
-    V_window(1) = max(min(V_axis)+Tband+Gband,V_window(1));
-    V_window(2) = min(max(V_axis)-Tband-Gband,V_window(2));
-    [~,rangeIndx] = min(abs(R_axis'-R_window));                             %Calulate range of CUTs
-    [~,dopplerIndx] = min(abs(V_axis-V_window));
-    [columnInds,rowInds] = meshgrid(dopplerIndx(1):dopplerIndx(2),...       %create Mesh grid for all CUTs locations
-      rangeIndx(1):rangeIndx(2));
-    CUTIdx = [rowInds(:) columnInds(:)]';                                   %Create CUTs index list
-    detections = cfar(RDM_map,CUTIdx);                                      %Preform CA-CFAR and return detection locations
-    detections_ind = CUTIdx(:,detections==1);                               %List detection index pairs
-    if plot                                                                 %If plot flag is true, plot detection map
-        helperDetectionsMap(RDM_map,R_axis',V_axis,rangeIndx,dopplerIndx,detections)
-        xlim(V_window)
-        ylim(R_window)
         xlabel('Velocity (m/s)')
     end
 end
