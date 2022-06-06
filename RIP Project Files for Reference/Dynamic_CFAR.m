@@ -241,49 +241,61 @@ hold on;
 rectangle('Position',[v_targets(target)-v_res/2,(R_targets(target)-R_res/2)*1e-3,v_res,(R_res)*1e-3])
 
 %%
-detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'k',80,'Tband',8,'Type','OS'); %Order statistics CFAR
-detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'Gband',2,'Tband',3,'Type','CA'); %Cell Averaging CFAR
+detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'k',80,'Tband',8,'Type','OS');   %Order statistics CFAR
+detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'Gband',2,'Tband',3,'Type','CA');%Cell Averaging CFAR
 
 %%
 function [detections_ind] = CFAR(RDM,varargin)
-    defaultTband = 5;
-    defaultGband = 0;
-    defaultPFA = 1e-2;
-    defaultk = 1;
-    defaultplotflag = true;
-    defaultType = 'CA';
-    expectedTypes = {'CA','OS'};
+    %Establish input parser defaults
+    defaultTband = 5;                                       %Default Training band size
+    defaultGband = 0;                                       %Default Guard band size
+    defaultPFA = 1e-2;                                      %Default probability of false alarm
+    defaultk = 1;                                           %Default order statistic
+    defaultplotflag = true;                                 %Default plot flag
+    defaultType = 'CA';                                     %Default CFAR type selection
+    expectedTypes = {'CA','OS'};                            %Allowed CFAR types
     
+    %Create the input parser
     p = inputParser;
-    addRequired(p,'RDM',@isnumeric);
-    addRequired(p,'R_axis',@isnumeric);
-    addRequired(p,'V_axis',@isnumeric);
-    addRequired(p,'R_window',@isnumeric);
-    addRequired(p,'V_window',@isnumeric);  
-    addParameter(p,'Type',defaultType, @(x) any(validatestring(x,expectedTypes)));
-    addParameter(p,'Tband',defaultTband,@isnumeric)
-    addParameter(p,'Gband',defaultGband,@isnumeric)
-    addParameter(p,'PFA',defaultPFA,@isnumeric)
-    addParameter(p,'k',defaultk,@isnumeric)
-    addParameter(p,'plot',defaultplotflag,@isnumerictype)
-    parse(p,RDM,varargin{:})
+    addRequired(p,'RDM',@isnumeric);                        %Range-Doppler map input
+    addRequired(p,'R_axis',@isnumeric);                     %Range axis input
+    addRequired(p,'V_axis',@isnumeric);                     %Velocity axis input
+    addRequired(p,'R_window',@isnumeric);                   %Range window input
+    addRequired(p,'V_window',@isnumeric);                   %Velocity window input
+    addParameter(p,'Type',defaultType, ...
+        @(x) any(validatestring(x,expectedTypes)));         %CFAR type input
+    addParameter(p,'Tband',defaultTband,@isnumeric)         %Training band size input
+    addParameter(p,'Gband',defaultGband,@isnumeric)         %Guard band size input
+    addParameter(p,'PFA',defaultPFA,@isnumeric)             %Probability of false alarm input
+    addParameter(p,'k',defaultk,@isnumeric)                 %Order statistic input
+    addParameter(p,'plot',defaultplotflag,@isnumerictype)   %Plot flag input
+    parse(p,RDM,varargin{:})                                %Parse inputs
     
-    RDM_map = abs(p.Results.RDM);                                                     %Ensure RDM is Real
-    cfar = phased.CFARDetector2D('Method',p.Results.Type,'GuardBandSize',p.Results.Gband,'TrainingBandSize',p.Results.Tband,... %set-up CFAR Detector
-      'Rank',p.Results.k,'ProbabilityFalseAlarm',p.Results.PFA)
-    R_window(1) = max(min(p.Results.R_axis)+p.Results.Tband+p.Results.Gband,p.Results.R_window(1));                 %Ensure CUTs are far enough from edge
-    R_window(2) = min(max(p.Results.R_axis)-p.Results.Tband-p.Results.Gband,p.Results.R_window(2));
-    V_window(1) = max(min(p.Results.V_axis)+p.Results.Tband+p.Results.Gband,p.Results.V_window(1));
-    V_window(2) = min(max(p.Results.V_axis)-p.Results.Tband-p.Results.Gband,p.Results.V_window(2));
-    [~,rangeIndx] = min(abs(p.Results.R_axis'-R_window));                             %Calulate range of CUTs
+    RDM_map = abs(p.Results.RDM);                           %Ensure RDM is Real
+    
+    cfar = phased.CFARDetector2D('Method',p.Results.Type,...%set-up CFAR Detector
+      'GuardBandSize',p.Results.Gband,'TrainingBandSize',...
+      p.Results.Tband,'Rank',p.Results.k,'ProbabilityFalseAlarm'...
+      ,p.Results.PFA)
+  
+    R_window(1) = max(min(p.Results.R_axis)+...             %Ensure CUTs are far enough from edge
+        p.Results.Tband+p.Results.Gband,p.Results.R_window(1));                 
+    R_window(2) = min(max(p.Results.R_axis)-...
+        p.Results.Tband-p.Results.Gband,p.Results.R_window(2));
+    V_window(1) = max(min(p.Results.V_axis)+...
+        p.Results.Tband+p.Results.Gband,p.Results.V_window(1));
+    V_window(2) = min(max(p.Results.V_axis)-...
+        p.Results.Tband-p.Results.Gband,p.Results.V_window(2));
+    [~,rangeIndx] = min(abs(p.Results.R_axis'-R_window));   %Calulate range of CUTs
     [~,dopplerIndx] = min(abs(p.Results.V_axis-V_window));
-    [columnInds,rowInds] = meshgrid(dopplerIndx(1):dopplerIndx(2),...       %create Mesh grid for all CUTs locations
-      rangeIndx(1):rangeIndx(2));
-    CUTIdx = [rowInds(:) columnInds(:)]';                                   %Create CUTs index list
-    detections = cfar(RDM_map,CUTIdx);                                      %Preform CA-CFAR and return detection locations
-    detections_ind = CUTIdx(:,detections==1);                               %List detection index pairs
-    if p.Results.plot                                                                 %If plot flag is true, plot detection map
-        helperDetectionsMap(RDM_map,p.Results.R_axis',p.Results.V_axis,rangeIndx,dopplerIndx,detections)
+    [columnInds,rowInds] = meshgrid(dopplerIndx(1):...      %Create Mesh grid for all CUTs locations
+      dopplerIndx(2),rangeIndx(1):rangeIndx(2));
+    CUTIdx = [rowInds(:) columnInds(:)]';                   %Create CUTs index list
+    detections = cfar(RDM_map,CUTIdx);                      %Preform CA-CFAR and return detection locations
+    detections_ind = CUTIdx(:,detections==1);               %List detection index pairs
+    if p.Results.plot                                       %If plot flag is true, plot detection map
+        helperDetectionsMap(RDM_map,p.Results.R_axis',...
+            p.Results.V_axis,rangeIndx,dopplerIndx,detections)
         xlim(p.Results.V_window)
         ylim(p.Results.R_window)
         xlabel('Velocity (m/s)')
