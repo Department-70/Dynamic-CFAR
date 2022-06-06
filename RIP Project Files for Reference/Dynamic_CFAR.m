@@ -76,7 +76,6 @@ tau = 2*Range/c;                                                        %time de
 F_D = 2*v_targets/lambda;                                               %Doppler frequency for each target
 
 Nfft_Fd = 1024;                                                         %FFT sampling rate Doppler processing
-
 %%
 %Noise Parameters
 kB = 1.38e-23;                                                          %Boltzman constant
@@ -100,7 +99,6 @@ x_TX = (x_amp.*exp(1j.*x_phase));                                       %Transmi
 t_fast =(t_i:Ts:t_f);                                                   %Fast time vector                               
 L_ADC = length(t_fast);
 noise = sqrt(Pn/2)*((randn(L_ADC,M)) + 1j*randn(L_ADC,M));
-
 %%
 %%------------------------------------------------------------------
 % Receive signal simulation Range/Doppler shift
@@ -121,7 +119,6 @@ end
 %%
 x_RX_TDshift = sum(x_RX_temp,3)+noise;                                  %Sum all target to get recieved signal
 X_RX = fftshift(fft(x_RX_TDshift,L_ADC,1),1);                           %Freq. domain recieved signal
-
 %%
 %%------------------------------------------------------------------
 % Matched Filter
@@ -239,11 +236,9 @@ set(gca,'ydir','normal')
 colorbar
 hold on;
 rectangle('Position',[v_targets(target)-v_res/2,(R_targets(target)-R_res/2)*1e-3,v_res,(R_res)*1e-3])
-
 %%
 detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'k',80,'Tband',8,'Type','OS');   %Order statistics CFAR
 detections_ind = CFAR(RDM, R_axis, V_axis, [2000 2100], [-375 375],'Gband',2,'Tband',3,'Type','CA');%Cell Averaging CFAR
-
 %%
 function [detections_ind] = CFAR(RDM,varargin)
     %Establish input parser defaults
@@ -293,6 +288,28 @@ function [detections_ind] = CFAR(RDM,varargin)
     CUTIdx = [rowInds(:) columnInds(:)]';                   %Create CUTs index list
     detections = cfar(RDM_map,CUTIdx);                      %Preform CA-CFAR and return detection locations
     detections_ind = CUTIdx(:,detections==1);               %List detection index pairs
+    
+    detectionsmap = zeros(size(RDM_map));
+    for i=1:length(detections_ind)
+        detectionsmap(detections_ind(1,i),detections_ind(2,i))=1;
+    end
+%     detectionsmap(p.Results.R_window(1):p.Results.R_window(2),p.Results.V_window(1):p.Results.V_window(2)) = ...
+%         reshape(double(detections),p.Results.R_window(2)-p.Results.R_window(1)+1,...
+%         p.Results.V_window(2)-p.Results.V_window(1)+1);
+    detectionblobs = bwlabel(detectionsmap,4);
+    s = regionprops(detectionblobs, 'centroid');
+    cent = cat(1,s.Centroid);
+    cent = sortrows(cent,2);
+    cent = round(cent);
+    ranges = linspace(R_window(1),R_window(2),length(RDM(:,1)));
+    velocities = linspace(V_window(1),V_window(2),length(RDM(1,:)));
+%     RV = meshgrid(ranges,velocities);
+    dets = zeros(size(cent));
+    dets(:,1) = velocities(cent(:,1));
+    dets(:,2) = ranges(cent(:,2));
+    dets_V = velocities(cent(1,1))
+    
+    
     if p.Results.plot                                       %If plot flag is true, plot detection map
         helperDetectionsMap(RDM_map,p.Results.R_axis',...
             p.Results.V_axis,rangeIndx,dopplerIndx,detections)
