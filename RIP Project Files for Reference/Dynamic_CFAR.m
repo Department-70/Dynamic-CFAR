@@ -19,7 +19,7 @@ scale_std = .1;                                                         %Standar
 shape_ctr = .5;                                                         %Normal mean for shape value of wiebull dist
 shape_std = .02;                                                        %Standard Dev for shape value of wiebull dist
 dist_density = .8;                                                      %Density of wiebull sources per m in Rng_span
-amples_mean = 100;                                                      %Normal mean for num of samples in a clutter source
+samples_mean = 100;                                                      %Normal mean for num of samples in a clutter source
 samples_std = 20;                                                       %Standard Dev for num of samples in a clutter source
 sigma_power = 1;                                                        %Average power for the clutter distribution
 
@@ -53,7 +53,7 @@ Lx = round(Tx/Ts);                                                      %# of po
 G = 100;                                                                %system gain
 phi = rand()*2*pi();                                                    %random phi offset
 alpha = sqrt((G^2*lambda^2*sigmas)./((4*pi)^3*R_targets.^4))*exp(1j*phi);%scaling calculation alpha
-gamma = B/Tx;                                                           %gamma for phase component of LFM
+gamma_LFM = B/Tx;                                                           %gamma for phase component of LFM
 
 %System Limits-----------------------------------------------------
 Rmin_sys = Tx/2*c                                                       %Minimum range for system
@@ -83,6 +83,18 @@ Temp = 290;                                                             %noise t
 Fsys = 300;                                                               %system loss
 Pn = kB*Temp*Fs*Fsys;                                                   %Calculated noise power
 %%
+%Testing kdistribution and rejection method for sample generation
+v = 2;
+w = 2;
+x = 0.01:0.01:5;
+
+K_dist = kdist(v,w,x);
+plot(x,K_dist)
+
+kdist_samples = rejection_dist(K_dist,x,'sample_num',100000);
+hist_kdist = hist(kdist_samples,100);
+bar(hist_kdist)
+%%
 %%------------------------------------------------------------------
 % Transmit signal simulation
 %%------------------------------------------------------------------
@@ -91,8 +103,8 @@ x_amp = x_amp/max(abs(x_amp))*sqrt(Pt);                                 %amplitu
 Lx_new = length(x_amp);                                                 %new convolved length
 Tx_new = Lx_new*Ts;                                                     %new convolved period
 t_x = (0:Lx_new-1)*Ts;                                                  %transmit time scale given convolution
-B_new = gamma*Tx_new;                                                   %New effective Bandwidth
-x_phase = (-2.*pi.*(.5*B_new).*t_x + pi.*gamma*t_x.^2)';                %transmitted phase component of LFM
+B_new = gamma_LFM*Tx_new;                                                   %New effective Bandwidth
+x_phase = (-2.*pi.*(.5*B_new).*t_x + pi.*gamma_LFM*t_x.^2)';                %transmitted phase component of LFM
 x_TX = (x_amp.*exp(1j.*x_phase));                                       %Transmitted signal
 
 %Noise Generation --------------------------------------------------
@@ -351,5 +363,37 @@ function [Range,Velocity,Sigma] = clutter_wbl(Rng_span, V_mean, V_std, scale_ctr
         Velocity = [Velocity;vel_norm];
         sigma_norm = max((sigma_power./(10*samples)).*randn(samples,1)+(sigma_power./samples),0);
         Sigma = [Sigma;sigma_norm];
+    end
+end
+
+function [y] = kdist(v,w,x)
+    y = (4*x.^v.*(v./w).^((1+v)./2).*besselk(-1+v,2.*x.*sqrt(v./w)))./(gamma(v));
+end
+
+function [samples] = rejection_dist(PDF, randvar_axis, varargin)
+    default_min = min(randvar_axis);
+    default_max = max(randvar_axis);
+    PDF_max = max(PDF);
+    default_samples = 100;
+    
+    p = inputParser;
+    addRequired(p, 'PDF',@isnumeric);
+    addRequired(p, 'randvar_axis',@isnumeric);
+    addParameter(p,'Rvar_min',default_min,@isnumeric)
+    addParameter(p,'Rvar_max',default_max,@isnumeric)
+    addParameter(p,'PDF_max',PDF_max,@isnumeric)
+    addParameter(p,'sample_num',default_samples,@isnumeric)
+    parse(p,PDF,randvar_axis,varargin{:}) 
+    
+    samples = zeros(1,p.Results.sample_num);
+    i=1;
+    while i<p.Results.sample_num+1
+       r1 = (p.Results.Rvar_max-p.Results.Rvar_min).*rand()+p.Results.Rvar_min;
+       r2 = p.Results.PDF_max.*rand();
+       PDF_r1 = interp1(p.Results.randvar_axis,p.Results.PDF,r1,'spline');
+       if r2<PDF_r1
+            samples(1,i)=r1;
+            i=i+1;
+       end    
     end
 end
