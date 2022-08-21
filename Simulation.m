@@ -4,7 +4,7 @@ clear all
 %% Simulate the scenario and return signal
 
 alg = 'glrt';   % This sets the type of adaptive detector that will be applied.
-type = 'K';
+type = 'pareto1';
 sim_num = 1e5;  % The number of scenarios to simulate.
 gen_data = true;% Flag to decide whether or not to generate new data.
 
@@ -18,11 +18,11 @@ P_fa = 1e-3;    % Desired probability of false alarm.
 SNIR = [10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35];      % Target SNIR in dB
 CT = 'constant';% Clutter texture type. Either 'constant' for Guassian clutter or 'gamma' for K-distributed clutter.
 v = 0.1;        % Texture order parameter. Currently only used of texture is gamma distributed.
-rho = 0.999;%0.9;      % The one-lag correlation coefficient.
+rho = 0.9;%0.9;      % The one-lag correlation coefficient.
 tau = 1.0;        % Clutter texture
 % a = 0.5;%100;%4;
 % a = 1.5;
-a = 0.5;%1.5;
+a = 1.5;%1.5;
 % b = 4;%1/3;
 b = 1;
 theta_ma = 0.20;%0.035; % Target misalignment

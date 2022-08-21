@@ -27,6 +27,8 @@ switch type
     case 'K'
 %         tau = gamrnd(a,b,[J,N]);
         tau = repmat(gamrnd(a,b,[J,1]),[1,N]);
+    case 'pareto1'
+        tau = repmat(1./gamrnd(a,b,[J,1]),[1,N]);
 end
 d = sqrt(tau).*x;    % Model test sample clutter (d = sqrt(tau)*x).
 % d = (tau.^0.5).*x;    % Model test sample clutter (d = sqrt(tau)*x).
