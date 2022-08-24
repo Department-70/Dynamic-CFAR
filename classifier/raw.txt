@@ -1,0 +1,6 @@
+--label=raw_data
+--dense
+200
+100
+--dropout_dense=.2
+--steps_per_epoch=1000

@@ -14,17 +14,18 @@ import pickle
 from tensorflow import keras
 from keras_preprocessing.image import ImageDataGenerator
 from tensorflow.keras.utils import plot_model
+from sklearn.utils import shuffle
 
-
+import scipy.io
 import os
 import fnmatch
 import matplotlib.pyplot as plt
 import numpy as np
 
-# import pandas as pd
-# import sklearn
-# from sklearn import metrics
-# import seaborn
+import pandas as pd
+import sklearn
+from sklearn import metrics
+import seaborn
 
 from keras.datasets import mnist
 # # Provided
@@ -34,7 +35,9 @@ from job_control import *
 # Import application specific functions for data system/ML design
 # from chesapeake_loader import *
 # from create_unet import *
+from create_mlp import *
 from create_cnn import *
+from create_RNN_network import *
 #################################################################
 
 
@@ -45,7 +48,7 @@ def create_parser():
     setting given the specific application
     '''
     # Parse the command-line arguments
-    parser = argparse.ArgumentParser(description='CNN', fromfile_prefix_chars='@')
+    parser = argparse.ArgumentParser(description='MLP', fromfile_prefix_chars='@')
 
     # High-level commands
     parser.add_argument('--check', action='store_true', help='Check results for completeness')
@@ -58,34 +61,41 @@ def create_parser():
 
     # High-level experiment configuration
     parser.add_argument('--exp_type', type=str, default=None, help="Experiment type")    
-    parser.add_argument('--label', type=str, default=None, help="Extra label to add to output files")
-   #parser.add_argument('--dataset', type=str, default='radiant_earth/pa', help='Data set directory')    
+    parser.add_argument('--label', type=str, default='Raw2', help="Extra label to add to output files")
+    parser.add_argument('--dataset', type=str, default='clutter.mat', help='Data set directory')    
     parser.add_argument('--results_path', type=str, default='./results', help='Results directory')
 
     # Specific experiment configuration
     parser.add_argument('--exp_index', type=int, default=None, help='Experiment index')
-    parser.add_argument('--epochs', type=int, default=100, help='Training epochs')
+    parser.add_argument('--epochs', type=int, default=1000, help='Training epochs')
     parser.add_argument('--lrate', type=float, default=0.001, help="Learning rate")
-    parser.add_argument('--image_size', nargs=3, type=int, default=[28,28,1], help="Size of input images (rows, cols, channels)")
+    parser.add_argument('--image_size', nargs=3, type=int, default=[32,32], help="Size of input images (rows, cols, channels)")
     parser.add_argument('--nclasses', type=int, default=4, help='Number of classes in maxpool output')    
    
-    #Individual layer parameters (convolution in this example)
-    parser.add_argument('--conv_size', nargs='+', type=int, default=[3,3], help='kernel size of leading conv layers') 
+    # Individual layer parameters (convolution in this example)
+    parser.add_argument('--conv_size', nargs='+', type=int, default=None, help='kernel size of leading conv layers') 
     parser.add_argument('--conv_nfilters', nargs='+', type=int, default=[20,20], help='Convolution filters per layer (sequence of ints)')
     parser.add_argument('--conv_stride', nargs='+', type=int, default=[1,1], help='stride amount in conv layers') 
-    parser.add_argument('--maxpool',type=int, default=2, help='size of pooling')
-    parser.add_argument('--dropout_spatial', nargs='+', type=float, default=.1, help='Inception Layer compression flag')
+    parser.add_argument('--maxpool',type=int, default=None, help='size of pooling')
+    parser.add_argument('--dropout_spatial', nargs='+', type=float, default=None, help='Inception Layer compression flag')
     
-    parser.add_argument('--dense', nargs='+', type=int, default=[100, 50], help='Number of hidden units per layer (sequence of ints)')
-    parser.add_argument('--dropout_dense', type=float, default=None, help='Dropout rate')
+    #RNN layer parameters
+    parser.add_argument('--rnn_size', nargs='+', type=int, default=None, help='kernel size of leading Simple RNN layers')
+    parser.add_argument('--gru_size', nargs='+', type=int, default=None, help='kernel size of leading GRU layers')
+    parser.add_argument('--lstm_size', nargs='+', type=int, default=None, help='kernel size of leading LSTM layers')
+    parser.add_argument('--dropout_rnn', type=float, default=0.0, help='Dropout rate')
+    parser.add_argument('--L2_rnn', type=float, default=None, help="L2 regularization in inception parameter")
+    
+    parser.add_argument('--dense', nargs='+', type=int, default=[500, 250,50], help='Number of hidden units per layer (sequence of ints)')
+    parser.add_argument('--dropout_dense', type=float, default=0.2, help='Dropout rate')
     parser.add_argument('--L2_dense', type=float, default=None, help="L2 regularization parameter")
     # Early stopping
     parser.add_argument('--min_delta', type=float, default=0.0, help="Minimum delta for early termination")
-    parser.add_argument('--patience', type=int, default=40, help="Patience for early termination")
+    parser.add_argument('--patience', type=int, default=100, help="Patience for early termination")
 
     # Training parameters
-    parser.add_argument('--batch', type=int, default=8, help="Training set batch size")
-    parser.add_argument('--steps_per_epoch', type=int, default=1000, help="Number of gradient descent steps per epoch")    
+    parser.add_argument('--batch', type=int, default=1, help="Training set batch size")
+    parser.add_argument('--steps_per_epoch', type=int, default=None, help="Number of gradient descent steps per epoch")    
     
     '''
     Examples Parser inputs:
@@ -253,16 +263,35 @@ def generate_fname(args, params_str):
     convention.
     '''
     
+    # RNN information
+    if args.rnn_size is None:
+        rnn_str = ''
+        rnn_size_string =''
+    else:
+        rnn_str = 'RNN'
+        rnn_size_string = '_'.join(str(x) for x in args.rnn_size)
+    
+    if args.gru_size is None:
+        gru_str = ''
+        gru_size_string =''
+    else:
+        gru_str = 'GRU'
+        gru_size_string = '_'.join(str(x) for x in args.gru_size)
+        
+    if args.lstm_size is None:
+        lstm_str = ''
+        lstm_size_string =''
+    else:
+        lstm_str = 'LSTM'
+        lstm_size_string = '_'.join(str(x) for x in args.lstm_size)
     # Conv configuration
     if args.conv_size is None:
-        conv_str = ''
         conv_size_str = ''
         conv_filter_str = ''
     else:
-        conv_str = 'Conv'
         conv_size_str = '_'.join(str(x) for x in args.conv_size)
         conv_filter_str = '_'.join(str(x) for x in args.conv_nfilters)   
-    Dense
+    # Dense
     if args.dense is None:
         dense_str = ''
         dense_size_str = ''
@@ -273,24 +302,25 @@ def generate_fname(args, params_str):
     if args.dropout_dense is None:
         dropout_str = ''
     else:
-        dropout_str = 'drop_%0.3f_'%(args.dropout_dense)
+        dropout_str = '_drop_%0.3f_'%(args.dropout_dense)
+        dropout_str = dropout_str .replace('.','_') 
     # Label
     if args.label is None:
         label_str = ""
     else:
         label_str = "%s_"%args.label
-    # # Conv dropout
-    if args.dropout_spatial is None:
-        dropoutS_str = ''
-    else:
-        dropoutS_str = 'dropS_%0.3f_'%(args.dropout_spatial)
-        dropoutS_str= dropout_str.replace('.','_')
+    # Conv dropout
+    # if args.dropout_spatial is None:
+    #     dropoutS_str = ''
+    # else:
+    #     dropoutS_str = 'dropS_%0.3f_'%(args.dropout_spatial)
+    #     dropoutS_str= dropout_str.replace('.','_')
      
      # L2 regularization
     if args.L2_dense is None:
         regularizer_l2_str = ''
     else:
-        regularizer_l2_str = 'L2_%0.6f_'%(args.lambda_l2)
+        regularizer_l2_str = 'L2_%0.6f_'%(args.L2_dense)
         regularizer_l2_str= regularizer_l2_str.replace('.','_')    
     # Experiment type
     if args.exp_type is None:
@@ -299,11 +329,15 @@ def generate_fname(args, params_str):
         experiment_type_str = "%s_"%args.exp_type
 
     # learning rate
-    lrate_str = "LR_%0.6f_"%args.lrate
+    lrate_str = "LR_%0.6f"%args.lrate
     lrate_str= lrate_str.replace('.','_')
     # Put it all together, include a %s for each included string or argument
-    return "%s/%s%s_%s%s_%s_%s%s"%(args.results_path,
-                                        experiment_type_str, label_str,                            
+    return "%s/%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"%(args.results_path,
+                                        experiment_type_str, label_str,
+                                        conv_size_str,conv_filter_str,
+                                        rnn_str,rnn_size_string,
+                                        gru_str,gru_size_string,
+                                        lstm_str, lstm_size_string,
                                         dense_str, dense_size_str,
                                         dropout_str, 
                                         regularizer_l2_str,                                                                           
@@ -363,7 +397,71 @@ def execute_exp(args=None):
     #using the function from suplement file (multiple methods available including
     # pickle files, folder structures, .mat files)     
     
-    data,label = scipy.io.loadmat('clutter.mat')
+    mat = scipy.io.loadmat(args.dataset)
+    data =mat['data']
+    label = mat['label']
+    # data = np.reshape(dat,(8000,1024))
+    if args.conv_size is None:
+        class_size = int(np.round(data.shape[0]/args.nclasses))
+        train_portion = int(np.round(.75*data.shape[0]/args.nclasses))
+        val_portion = int(np.round(.125*data.shape[0]/args.nclasses))
+        test_portion =int(np.round(.125*data.shape[0]/args.nclasses)) 
+        train_x0=[]
+        train_y0=[]
+        val_x0=[]
+        val_y0=[]
+        test_x0=[]
+        test_y0=[]
+        for i in range(3):
+            train_x0.append(data[i*class_size:i*class_size+train_portion])
+            train_y0.append(label[i*class_size:i*class_size+train_portion])
+            val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+            val_y0.append(label[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+            test_x0.append(data[i*class_size+train_portion+val_portion:(i+1)*class_size])
+            test_y0.append(label[i*class_size+train_portion+val_portion:(i+1)*class_size])
+                    
+        train_x0=np.reshape(train_x0,(args.nclasses*train_portion,data.shape[1]))
+        train_y0=np.reshape(train_y0,(args.nclasses*train_portion,label.shape[1]))
+        val_x0=np.reshape(val_x0,(args.nclasses*val_portion,data.shape[1]))
+        val_y0=np.reshape(val_y0,(args.nclasses*val_portion,label.shape[1]))
+        test_x0=np.reshape(test_x0,(args.nclasses*test_portion,data.shape[1]))
+        test_y0=np.reshape(test_y0,(args.nclasses*test_portion,label.shape[1]))
+
+        train_x,train_y = shuffle(train_x0,train_y0)
+        val_x,val_y = shuffle(val_x0,val_y0)
+        test_x,test_y = shuffle(test_x0,test_y0)               
+    else:
+        data = np.reshape(data,(data.shape[0],32,32))
+        class_size = int(np.round(data.shape[0]/args.nclasses))
+        train_portion = int(np.round(.75*data.shape[0]/args.nclasses))
+        val_portion = int(np.round(.125*data.shape[0]/args.nclasses))
+        test_portion =int(np.round(.125*data.shape[0]/args.nclasses)) 
+        train_x0=[]
+        train_y0=[]
+        val_x0=[]
+        val_y0=[]
+        test_x0=[]
+        test_y0=[]
+        for i in range(args.nclasses):
+            train_x0.append(data[i*class_size:i*class_size+train_portion])
+            train_y0.append(label[i*class_size:i*class_size+train_portion])
+            val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+            val_y0.append(label[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+            test_x0.append(data[i*class_size+train_portion+val_portion:(i+1)*class_size])
+            test_y0.append(label[i*class_size+train_portion+val_portion:(i+1)*class_size])
+                    
+        train_x0=np.reshape(train_x0,(args.nclasses*train_portion,data.shape[1],data.shape[2]))
+        train_y0=np.reshape(train_y0,(args.nclasses*train_portion,label.shape[1]))
+        val_x0=np.reshape(val_x0,(args.nclasses*val_portion,data.shape[1],data.shape[2]))
+        val_y0=np.reshape(val_y0,(args.nclasses*val_portion,label.shape[1]))
+        test_x0=np.reshape(test_x0,(args.nclasses*test_portion,data.shape[1],data.shape[2]))
+        test_y0=np.reshape(test_y0,(args.nclasses*test_portion,label.shape[1]))
+    
+        train_x,train_y = shuffle(train_x0,train_y0)
+        val_x,val_y = shuffle(val_x0,val_y0)
+        test_x,test_y = shuffle(test_x0,test_y0)
+    
+    
     
     #Pull data given fold
     # dataset_train = create_dataset(base_dir=args.dataset,
@@ -383,18 +481,57 @@ def execute_exp(args=None):
                    for s, f, st, in zip(args.conv_size, args.conv_nfilters, args.conv_stride)]
     else:
         conv_layers = None  
+    if args.rnn_size is not None:
+        #dictionary of rnn parameters
+        rnn_layers = [{'units': i} for i in args.rnn_size]
+    else:
+        rnn_layers = None
+    
+    if args.gru_size is not None:
+        #dictionary of gru parameters
+        gru_layers = [{'units': i} for i in args.gru_size]
+    else:
+        gru_layers = None
+    
+    if args.lstm_size is not None:
+        #dictionary of lstm parameters
+        lstm_layers = [{'units': i} for i in args.lstm_size]
+    else:
+        lstm_layers = None
     dense_layers = [{'units': i} for i in args.dense]
     
     #function to build model given layer parameters provided above
-    model=create_cnn(args.image_size, args.nclasses, conv_layers=conv_layers,                             
-                              maxpool=args.maxpool,
-                              dense_layers=dense_layers,
-                              activation='elu',
-                              dropout=args.dropout_dense,
-                              dropout_spatial=args.dropout_spatial,
-                              lambda_l2=args.L2_dense,
-                              lrate=args.lrate)
-
+    if args.conv_size is None:
+        if (args.lstm_size or args.gru_size) is None:
+            model=create_mlp(data.shape[1], args.nclasses,
+                                  dense_layers=dense_layers,
+                                  activation='elu',
+                                  dropout=args.dropout_dense,                             
+                                  lambda_l2=args.L2_dense,
+                                  lrate=args.lrate)
+        else:
+             model=create_rnn_network(input_dim=(data.shape[1],data.shape[2]),
+                                     n_classes=args.nclasses,
+                                     conv_layers=conv_layers,
+                                     rnn_layers=rnn_layers,
+                                     gru_layers=gru_layers,
+                                     lstm_layers=lstm_layers,
+                                     dense_layers=dense_layers,
+                                     activation='elu',
+                                     activation_dense='elu',
+                                     recurrent_dropout=args.dropout_rnn,
+                                     dropout_dense=args.dropout_dense,
+                                     lambda_l2_dense=args.L2_dense,
+                                     lambda_l2_rnn=args.L2_rnn,
+                                     lrate=args.lrate)
+    else:
+        model=create_cnn(args.image_size, args.nclasses,
+                                conv_layers=conv_layers,
+                                dense_layers=dense_layers,
+                                activation='elu',
+                                dropout=args.dropout_dense,                             
+                                lambda_l2=args.L2_dense,
+                                lrate=args.lrate)
     
     # Report model structure if verbosity is turned on
     fbase = generate_fname(args, args_str)
@@ -427,27 +564,33 @@ def execute_exp(args=None):
 
     # Learn
     #  steps_per_epoch: how many batches from the training set do we use for training in one epoch?
-    history = model.fit(train_X, train_y,
+    history = model.fit(train_x, train_y,
                         epochs=args.epochs,
                         steps_per_epoch=args.steps_per_epoch,
                         use_multiprocessing=False, 
                         verbose=args.verbose>=2,
-                        validation_data=(val_X,val_y),
+                        validation_data=(val_x,val_y),
                         validation_steps=args.steps_per_epoch, 
                         callbacks=[early_stopping_cb])
 
     # Calculate and store the important input/output and prediction information from the testing set
     results = {}
     results['args'] = args
-    results['predict_validation'] = model.predict(val_X)
-    results['predict_validation_eval'] = model.evaluate(val_X,val_y)
+    results['train_in'] = train_x
+    results['train_label'] = train_y
+    results['val_in'] = val_x
+    results['val_label'] = val_y
+    results['test_in'] = test_x
+    results['test_label'] = test_y
+    results['predict_validation'] = model.predict(val_x)
+    results['predict_validation_eval'] = model.evaluate(val_x,val_y)
     
     if args.testing is not None:
-        results['predict_testing'] = model.predict(test_X)
-        results['predict_testing_eval'] = model.evaluate(test_X,test_y)
+        results['predict_testing'] = model.predict(test_x)
+        results['predict_testing_eval'] = model.evaluate(test_x,test_y)
         
-    results['predict_training'] = model.predict(train_X)
-    results['predict_training_eval'] = model.evaluate(train_X,train_y)
+    results['predict_training'] = model.predict(train_x)
+    results['predict_training_eval'] = model.evaluate(train_x,train_y)
     results['history'] = history.history
 
     
@@ -484,47 +627,98 @@ def read_all_rotations(dirname, filebase):
         results.append(r)
     return results
 
-# def display_Metrics(args1, model_name, test=False,save=False):    
-#     '''
-#     This function will take in the args for the shallow and deep network of 
-#     choice and then generate the figures (This is application specific)
-#     '''
-#     #pull the directory and base file name for shallow args 
-#     args_str = augment_args(args1)
-#     fbase = generate_fname(args1, args_str)
-#     fbase_1,drop = fbase.rsplit('rot',1)
-#     fbase_2 = '%srot_*_results.pkl'%(fbase_1)
-#     dir, fbase_0 = fbase_2.rsplit('/',1)
-#     dir, fbase_save = fbase_1.rsplit('/',1)
+def display_Metrics(args1, test=False,save=False):    
+    '''
+    This function will take in the args for the shallow and deep network of 
+    choice and then generate the figures (This is application specific)
+    '''
+    #pull the directory and base file name for shallow args 
+    args_str = augment_args(args1)
+    fbase = generate_fname(args1, args_str)
+    # fbase_1,drop = fbase.rsplit('rot',1)
+    fbase_1 = '%s_results.pkl'%(fbase)
+    dir, fbase_0 = fbase_1.rsplit('/',1)
+    dir, fbase_save = fbase.rsplit('/',1)
     
-#     #check results folder for all rotations with shallow network args
-#     results = read_all_rotations(dir, fbase_0)
+    #check results folder for all rotations with shallow network args
+    results = read_all_rotations(dir, fbase_0)
     
-#     #empty lists for appending
-#     val_acc1=[]
-#     test_acc1=[]
+    #empty lists for appending
+    val_acc1=[]
+    train_acc1=[]
     
-#     #extract validation accuracy, and testing accuracy
-#     for res_temp in results:
-#         val_acc1.append(res_temp['history']['val_sparse_categorical_accuracy'])      
-#         test_acc1.append(res_temp['predict_testing_eval'][1])
-#     colors = ['r','b','g','y','m' ]
+    #extract validation accuracy, and testing accuracy
+    for res_temp in results:
+        train_acc1.append(res_temp['history']['sparse_categorical_accuracy'])
+        val_acc1.append(res_temp['history']['val_sparse_categorical_accuracy'])      
+        
+    # colors = ['r','b','g','y','m' ]
     
-#     #Plot figure 2 Validation sparce accuracy vs. Epoch
-#     plt.figure(2)
-#     for i in range(np.size(results)):
-#         plt.plot(val_acc1[i],linestyle='-',color = colors[i], label ='Rotation_%s'%(i))
-#         # plt.plot(val_acc2[i],linestyle='--',color = colors[i], label ='Complex_Rotation_%s'%(i+1))
-#     plt.title("Validation ACC vs. Epoch")
-#     plt.ylabel('Sparse Categorical Accuracy')
-#     plt.xlabel('Epochs')
-#     plt.legend()
-#     plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.3), ncol= 5)
-#     plt.grid(True)
-#     plt.yticks(np.arange(0.9,1,.05))
-#     if save:
-#         plt.savefig('Fig2_Val_ACC_%s'%(fbase_save),facecolor='white',bbox_inches='tight')        
-#     # Load all 5 rotation models and iterate across the data to generate the confusion matricies
+    #Plot figure 2 Validation sparce accuracy vs. Epoch
+    plt.figure(1)
+    for i in range(np.size(results)):
+        plt.plot(train_acc1[i],linestyle='-', label = 'Training')
+        plt.plot(val_acc1[i],linestyle='-', label = 'Validation')
+
+        # plt.plot(val_acc2[i],linestyle='--',color = colors[i], label ='Complex_Rotation_%s'%(i+1))
+    plt.title("Validation/Training ACC vs. Epoch")
+    plt.ylabel('Sparse Categorical Accuracy')
+    plt.xlabel('Epochs')
+    plt.legend()
+    plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.3), ncol= 5)
+    plt.grid(True)
+    plt.gcf().set_size_inches(10, 5)
+    # plt.yticks(np.arange(0.9,1,.05))
+    if save:
+        plt.savefig('Val_ACC_%s'%(fbase_save),facecolor='white',bbox_inches='tight')        
+    # Load all 5 rotation models and iterate across the data to generate the confusion matricies
+    
+    if args1.nclasses == 3:
+        labels = [0,1,2]
+        xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=4.5)']
+    else:
+        labels = [0,1,2,3]
+        xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=1.5)','K-dist(a=4.5)']
+    # test_label = results['test_label'] 
+    test_label = results[0]['test_label']     
+    test_pred = results[0]['predict_testing']
+    test_preds = np.argmax(test_pred, axis=1)
+
+    train_label = results[0]['train_label']
+    train_pred = results[0]['predict_training']
+    train_preds = np.argmax(train_pred, axis=1)
+
+    val_label = results[0]['val_label']
+    val_pred = results[0]['predict_validation']
+    val_preds = np.argmax(val_pred, axis=1)
+    #Generate the confusion matrix 
+    conf_matrix3=sklearn.metrics.confusion_matrix(test_label, test_preds ,labels=labels, sample_weight=None, normalize='true')
+    conf_matrix1=sklearn.metrics.confusion_matrix(train_label, train_preds ,labels=labels, sample_weight=None, normalize='true')
+    conf_matrix2=sklearn.metrics.confusion_matrix(val_label, val_preds ,labels=labels, sample_weight=None, normalize='true')
+    plt.figure(2)
+    g1=seaborn.heatmap(conf_matrix1,annot=True, linewidths=4, cmap='magma_r', xticklabels=xylabels,yticklabels=xylabels)
+    g1.set_title('Training Confusion Matrix (Normalized true classes)', fontsize=20)
+    g1.set_xlabel("Predicted Class", fontsize=16)
+    g1.set_ylabel("True Class", fontsize=16)
+    plt.gcf().set_size_inches(10, 5)
+    if save:
+        plt.savefig('Train_Confusion_Matrix_%s'%(fbase_save),facecolor='white',bbox_inches='tight')
+    plt.figure(3)
+    g2=seaborn.heatmap(conf_matrix2,annot=True, linewidths=4, cmap='magma_r', xticklabels=xylabels,yticklabels=xylabels)
+    g2.set_title('Validation Confusion Matrix (Normalized true classes)', fontsize=20)
+    g2.set_xlabel("Predicted Class", fontsize=16)
+    g2.set_ylabel("True Class", fontsize=16)
+    plt.gcf().set_size_inches(10, 5)
+    if save:
+        plt.savefig('Val_Confusion_Matrix_%s'%(fbase_save),facecolor='white',bbox_inches='tight')
+    plt.figure(4)
+    g3=seaborn.heatmap(conf_matrix3,annot=True, linewidths=4, cmap='magma_r', xticklabels=xylabels,yticklabels=xylabels)
+    g3.set_title('Testing Confusion Matrix (Normalized true classes)', fontsize=20)
+    g3.set_xlabel("Predicted Class", fontsize=16)
+    g3.set_ylabel("True Class", fontsize=16)
+    plt.gcf().set_size_inches(10, 5)
+    if save:
+        plt.savefig('Test_Confusion_Matrix_%s'%(fbase_save),facecolor='white',bbox_inches='tight')
 #     if test:                            
 #         base_dir = 'radiant_earth/pa'
 #         dataset_test = create_dataset(base_dir=base_dir,

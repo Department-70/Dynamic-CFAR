@@ -1,0 +1,7 @@
+--dataset=clutter_order_3.mat
+--label=order3
+--dense
+200
+50
+--dropout_dense=.1
+--nclasses=3

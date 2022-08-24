@@ -1,0 +1,7 @@
+--dataset=clutter_order.mat
+--label=ordered_lstm
+--lstm_size
+20
+--dense
+50
+--dropout_dense=.1

@@ -1,0 +1,5 @@
+--epochs=1000
+--lrate=0.0001
+--patience=100
+--batch=1
+-vv

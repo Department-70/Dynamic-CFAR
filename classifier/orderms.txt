@@ -1,0 +1,7 @@
+--dataset=clutter_order_ms.mat
+--label=ordered_ms1
+--dense
+200
+50
+--dropout_dense=.2
+--steps_per_epoch=1000

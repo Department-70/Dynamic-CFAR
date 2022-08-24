@@ -1,0 +1,11 @@
+--label=raw_cnn
+--conv_size
+2
+--conv_nfilters
+20
+--conv_stride
+2
+--dense
+256
+16
+--dropout_dense=.2
