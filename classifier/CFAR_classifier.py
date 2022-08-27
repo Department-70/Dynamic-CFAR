@@ -412,7 +412,7 @@ def execute_exp(args=None):
         val_y0=[]
         test_x0=[]
         test_y0=[]
-        for i in range(3):
+        for i in range(args.nclasses):
             train_x0.append(data[i*class_size:i*class_size+train_portion])
             train_y0.append(label[i*class_size:i*class_size+train_portion])
             val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
@@ -672,8 +672,13 @@ def display_Metrics(args1, test=False,save=False):
     if save:
         plt.savefig('Val_ACC_%s'%(fbase_save),facecolor='white',bbox_inches='tight')        
     # Load all 5 rotation models and iterate across the data to generate the confusion matricies
-    
-    if args1.nclasses == 3:
+    if args1.nclasses ==7:
+        labels = [0,1,2,3,4,5,6]
+        if args1.dataset == 'clutter_order_7.mat':
+            xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=1.5)','K-dist(a=4.5)', 'Pareto(a=1)','Pareto(a=3)','Pareto(a=10)']
+        else:
+            xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=1.5)','K-dist(a=4.5)', 'Pareto(a=2)','Pareto(a=3)','Pareto(a=10)']
+    elif args1.nclasses == 3:
         labels = [0,1,2]
         xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=4.5)']
     else:

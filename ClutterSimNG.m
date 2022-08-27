@@ -1,5 +1,4 @@
 function [d] = ClutterSimNG(type,J,K,N,rho,a,b)
-
 % Calculate the interference return signal. Modeled as d = sqrt(tau)*x.
 % Define x, the interference speckle. This is modeled as circular complex
 % Gaussian.
