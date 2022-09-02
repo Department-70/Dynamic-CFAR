@@ -1,0 +1,7 @@
+--dataset=clutter_order_K_0_5.mat
+--label=order_ms_K_0_5-3
+--dense
+100
+20
+--dropout_dense=0
+--nclasses=10
