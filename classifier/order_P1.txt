@@ -1,0 +1,7 @@
+--dataset=clutter_Pareto_1.mat
+--label=P_1
+--dense
+200
+50
+--dropout_dense=0.1
+--nclasses=6
