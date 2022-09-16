@@ -1,6 +1,6 @@
 """
 
-@author: Geoffrey Dolinger
+@author: Alex Stringer, with supplied code by Geoffrey Dolinger
 """
 
 import numpy as np
@@ -48,16 +48,17 @@ def create_mlp_thresh(input_shape, n_classes,
         tensor = Dense(dense['units'], use_bias=True, name="FullyConnected%s"%(i), 
                   activation="elu",kernel_regularizer=kernel_regularizer)(tensor)   
         if dropout is not None:
-           tensor=Dropout(rate=dropout, name="dropout_%02d"%(i))(tensor)        
-    print('test')
+           tensor=Dropout(rate=dropout, name="dropout_%02d"%(i))(tensor)  
+           
     #Final Output Layer    
     output_tensor=Dense(1, use_bias=True, name="Output", activation="elu")(tensor)
-    print('test')
     opt = tf.keras.optimizers.Adam(learning_rate=lrate, beta_1=0.9, beta_2=0.999,
                                 epsilon=None, decay=0.0, amsgrad=False)
+    
     model=Model(inputs=input_tensor, outputs=output_tensor)
-    print('test')
+    # model.compile(loss=tf.keras.losses.MeanSquaredError(), 
+    #               optimizer=opt, metrics =tf.keras.metrics.MeanSquaredError()) 
     model.compile(loss=tf.keras.losses.MeanAbsoluteError(), 
-                  optimizer=opt, metrics =tf.keras.metrics.MeanAbsoluteError()) 
-    print('test')
+                   optimizer=opt, metrics =tf.keras.metrics.MeanAbsoluteError()) 
+    
     return model
