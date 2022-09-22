@@ -651,6 +651,9 @@ def display_Metrics(args1, test=False,save=False):
         train_acc1.append(res_temp['history']['mean_absolute_error'])
         val_acc1.append(res_temp['history']['mean_absolute_error'])      
         
+        # train_acc1.append(res_temp['history']['mean_square_error'])
+        # val_acc1.append(res_temp['history']['mean_square_error'])
+        
     # colors = ['r','b','g','y','m' ]
     #Plot figure 2 Validation sparce accuracy vs. Epoch
     plt.figure(1)
@@ -687,7 +690,7 @@ def display_Metrics(args1, test=False,save=False):
     # # test_label = results['test_label'] 
     
     test_label = results[0]['test_label']   
-    test_label_ind = np.asarray(np.where(np.round(test_label/1000,decimals=4)==0.4855))
+    test_label_ind = np.asarray(np.where(np.round(test_label,decimals=4)==0.6437))
     test_labels = np.zeros([np.size(test_label_ind,axis=1)])
     test_pred = results[0]['predict_testing']
     test_preds = np.zeros([np.size(test_label_ind,axis=1)])

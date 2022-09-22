@@ -1,7 +1,8 @@
---dataset=clutter_order_K_0_5.mat
---label=order_ms_K_0_5-3
+--dataset=clutter_order_Pareto_4.mat
+--label=P_44
 --dense
-100
-20
---dropout_dense=0
---nclasses=10
+1000
+200
+50
+--dropout_dense=0.1
+--nclasses=8
