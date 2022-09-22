@@ -401,65 +401,73 @@ def execute_exp(args=None):
     data =mat['data']
     label = mat['label']
     # data = np.reshape(dat,(8000,1024))
-    if args.conv_size is None:
-        class_size = int(np.round(data.shape[0]/args.nclasses))
-        train_portion = int(np.round(.75*data.shape[0]/args.nclasses))
-        val_portion = int(np.round(.125*data.shape[0]/args.nclasses))
-        test_portion =int(np.round(.125*data.shape[0]/args.nclasses)) 
-        train_x0=[]
-        train_y0=[]
-        val_x0=[]
-        val_y0=[]
-        test_x0=[]
-        test_y0=[]
-        for i in range(args.nclasses):
-            train_x0.append(data[i*class_size:i*class_size+train_portion])
-            train_y0.append(label[i*class_size:i*class_size+train_portion])
-            val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
-            val_y0.append(label[i*class_size+train_portion:i*class_size+train_portion+val_portion])
-            test_x0.append(data[i*class_size+train_portion+val_portion:(i+1)*class_size])
-            test_y0.append(label[i*class_size+train_portion+val_portion:(i+1)*class_size])
-                    
-        train_x0=np.reshape(train_x0,(args.nclasses*train_portion,data.shape[1]))
-        train_y0=np.reshape(train_y0,(args.nclasses*train_portion,label.shape[1]))
-        val_x0=np.reshape(val_x0,(args.nclasses*val_portion,data.shape[1]))
-        val_y0=np.reshape(val_y0,(args.nclasses*val_portion,label.shape[1]))
-        test_x0=np.reshape(test_x0,(args.nclasses*test_portion,data.shape[1]))
-        test_y0=np.reshape(test_y0,(args.nclasses*test_portion,label.shape[1]))
+    # if args.conv_size is None:
+    train_portion = int(np.round(.75*data.shape[0]))
+    val_portion = int(np.round(.125*data.shape[0]))
+    test_portion =int(np.round(.125*data.shape[0])) 
+    train_x0=data[0:train_portion,:]
+    train_y0=label[0:train_portion,:]
+    val_x0=data[train_portion:train_portion+val_portion,:]
+    val_y0=label[train_portion:train_portion+val_portion,:]
+    test_x0=data[-test_portion:,:]
+    test_y0=label[-test_portion:,:]
 
-        train_x,train_y = shuffle(train_x0,train_y0)
-        val_x,val_y = shuffle(val_x0,val_y0)
-        test_x,test_y = shuffle(test_x0,test_y0)               
-    else:
-        data = np.reshape(data,(data.shape[0],32,32))
-        class_size = int(np.round(data.shape[0]/args.nclasses))
-        train_portion = int(np.round(.75*data.shape[0]/args.nclasses))
-        val_portion = int(np.round(.125*data.shape[0]/args.nclasses))
-        test_portion =int(np.round(.125*data.shape[0]/args.nclasses)) 
-        train_x0=[]
-        train_y0=[]
-        val_x0=[]
-        val_y0=[]
-        test_x0=[]
-        test_y0=[]
-        for i in range(args.nclasses):
-            train_x0.append(data[i*class_size:i*class_size+train_portion])
-            train_y0.append(label[i*class_size:i*class_size+train_portion])
-            val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
-            val_y0.append(label[i*class_size+train_portion:i*class_size+train_portion+val_portion])
-            test_x0.append(data[i*class_size+train_portion+val_portion:(i+1)*class_size])
-            test_y0.append(label[i*class_size+train_portion+val_portion:(i+1)*class_size])
-                    
-        train_x0=np.reshape(train_x0,(args.nclasses*train_portion,data.shape[1],data.shape[2]))
-        train_y0=np.reshape(train_y0,(args.nclasses*train_portion,label.shape[1]))
-        val_x0=np.reshape(val_x0,(args.nclasses*val_portion,data.shape[1],data.shape[2]))
-        val_y0=np.reshape(val_y0,(args.nclasses*val_portion,label.shape[1]))
-        test_x0=np.reshape(test_x0,(args.nclasses*test_portion,data.shape[1],data.shape[2]))
-        test_y0=np.reshape(test_y0,(args.nclasses*test_portion,label.shape[1]))
     
-        train_x,train_y = shuffle(train_x0,train_y0)
-        val_x,val_y = shuffle(val_x0,val_y0)
-        test_x,test_y = shuffle(test_x0,test_y0)
+    
+    #     train_x0=[]
+    #     train_y0=[]
+    #     val_x0=[]
+    #     val_y0=[]
+    #     test_x0=[]
+    #     test_y0=[]
+    #     for i in range(args.nclasses):
+    #         train_x0.append(data[i*class_size:i*class_size+train_portion])
+    #         train_y0.append(label[i*class_size:i*class_size+train_portion])
+    #         val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+    #         val_y0.append(label[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+    #         test_x0.append(data[i*class_size+train_portion+val_portion:(i+1)*class_size])
+    #         test_y0.append(label[i*class_size+train_portion+val_portion:(i+1)*class_size])
+                    
+    #     train_x0=np.reshape(train_x0,(args.nclasses*train_portion,data.shape[1]))
+    #     train_y0=np.reshape(train_y0,(args.nclasses*train_portion,label.shape[1]))
+    #     val_x0=np.reshape(val_x0,(args.nclasses*val_portion,data.shape[1]))
+    #     val_y0=np.reshape(val_y0,(args.nclasses*val_portion,label.shape[1]))
+    #     test_x0=np.reshape(test_x0,(args.nclasses*test_portion,data.shape[1]))
+    #     test_y0=np.reshape(test_y0,(args.nclasses*test_portion,label.shape[1]))
+
+    #     train_x,train_y = shuffle(train_x0,train_y0)
+    #     val_x,val_y = shuffle(val_x0,val_y0)
+    #     test_x,test_y = shuffle(test_x0,test_y0)               
+    # else:
+    #     data = np.reshape(data,(data.shape[0],32,32))
+    #     class_size = int(np.round(data.shape[0]/args.nclasses))
+    #     train_portion = int(np.round(.75*data.shape[0]/args.nclasses))
+    #     val_portion = int(np.round(.125*data.shape[0]/args.nclasses))
+    #     test_portion =int(np.round(.125*data.shape[0]/args.nclasses)) 
+    #     train_x0=[]
+    #     train_y0=[]
+    #     val_x0=[]
+    #     val_y0=[]
+    #     test_x0=[]
+    #     test_y0=[]
+    #     for i in range(args.nclasses):
+    #         train_x0.append(data[i*class_size:i*class_size+train_portion])
+    #         train_y0.append(label[i*class_size:i*class_size+train_portion])
+    #         val_x0.append(data[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+    #         val_y0.append(label[i*class_size+train_portion:i*class_size+train_portion+val_portion])
+    #         test_x0.append(data[i*class_size+train_portion+val_portion:(i+1)*class_size])
+    #         test_y0.append(label[i*class_size+train_portion+val_portion:(i+1)*class_size])
+                    
+    #     train_x0=np.reshape(train_x0,(args.nclasses*train_portion,data.shape[1],data.shape[2]))
+    #     train_y0=np.reshape(train_y0,(args.nclasses*train_portion,label.shape[1]))
+    #     val_x0=np.reshape(val_x0,(args.nclasses*val_portion,data.shape[1],data.shape[2]))
+    #     val_y0=np.reshape(val_y0,(args.nclasses*val_portion,label.shape[1]))
+    #     test_x0=np.reshape(test_x0,(args.nclasses*test_portion,data.shape[1],data.shape[2]))
+    #     test_y0=np.reshape(test_y0,(args.nclasses*test_portion,label.shape[1]))
+    
+    train_x,train_y = shuffle(train_x0,train_y0)
+    val_x,val_y = shuffle(val_x0,val_y0)
+    test_x,test_y = shuffle(test_x0,test_y0)
     
     
     
@@ -501,37 +509,43 @@ def execute_exp(args=None):
     dense_layers = [{'units': i} for i in args.dense]
     
     #function to build model given layer parameters provided above
-    if args.conv_size is None:
-        if (args.lstm_size or args.gru_size) is None:
-            model=create_mlp(data.shape[1], args.nclasses,
+    model=create_mlp(data.shape[1], args.nclasses,
                                   dense_layers=dense_layers,
                                   activation='elu',
                                   dropout=args.dropout_dense,                             
                                   lambda_l2=args.L2_dense,
                                   lrate=args.lrate)
-        else:
-             model=create_rnn_network(input_dim=(data.shape[1],data.shape[2]),
-                                     n_classes=args.nclasses,
-                                     conv_layers=conv_layers,
-                                     rnn_layers=rnn_layers,
-                                     gru_layers=gru_layers,
-                                     lstm_layers=lstm_layers,
-                                     dense_layers=dense_layers,
-                                     activation='elu',
-                                     activation_dense='elu',
-                                     recurrent_dropout=args.dropout_rnn,
-                                     dropout_dense=args.dropout_dense,
-                                     lambda_l2_dense=args.L2_dense,
-                                     lambda_l2_rnn=args.L2_rnn,
-                                     lrate=args.lrate)
-    else:
-        model=create_cnn(args.image_size, args.nclasses,
-                                conv_layers=conv_layers,
-                                dense_layers=dense_layers,
-                                activation='elu',
-                                dropout=args.dropout_dense,                             
-                                lambda_l2=args.L2_dense,
-                                lrate=args.lrate)
+    # if args.conv_size is None:
+    #     if (args.lstm_size or args.gru_size) is None:
+    #         model=create_mlp(data.shape[1], args.nclasses,
+    #                               dense_layers=dense_layers,
+    #                               activation='elu',
+    #                               dropout=args.dropout_dense,                             
+    #                               lambda_l2=args.L2_dense,
+    #                               lrate=args.lrate)
+    #     else:
+    #          model=create_rnn_network(input_dim=(data.shape[1],data.shape[2]),
+    #                                  n_classes=args.nclasses,
+    #                                  conv_layers=conv_layers,
+    #                                  rnn_layers=rnn_layers,
+    #                                  gru_layers=gru_layers,
+    #                                  lstm_layers=lstm_layers,
+    #                                  dense_layers=dense_layers,
+    #                                  activation='elu',
+    #                                  activation_dense='elu',
+    #                                  recurrent_dropout=args.dropout_rnn,
+    #                                  dropout_dense=args.dropout_dense,
+    #                                  lambda_l2_dense=args.L2_dense,
+    #                                  lambda_l2_rnn=args.L2_rnn,
+    #                                  lrate=args.lrate)
+    # else:
+    #     model=create_cnn(args.image_size, args.nclasses,
+    #                             conv_layers=conv_layers,
+    #                             dense_layers=dense_layers,
+    #                             activation='elu',
+    #                             dropout=args.dropout_dense,                             
+    #                             lambda_l2=args.L2_dense,
+    #                             lrate=args.lrate)
     
     # Report model structure if verbosity is turned on
     fbase = generate_fname(args, args_str)
@@ -675,9 +689,9 @@ def display_Metrics(args1, test=False,save=False):
     if args1.nclasses ==7:
         labels = [0,1,2,3,4,5,6]
         if args1.dataset == 'clutter_order_7.mat':
-            xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=1.5)','K-dist(a=4.5)', 'Pareto(a=1)','Pareto(a=3)','Pareto(a=10)']
+            xylabels = ['Gaussian', 'K-dist(a=0.55)','K-dist(a=2.375)','K-dist(a=6.09)', 'Pareto(a=1.4)','Pareto(a=4.75)','Pareto(a=8.75)']
         else:
-            xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=1.5)','K-dist(a=4.5)', 'Pareto(a=2)','Pareto(a=3)','Pareto(a=10)']
+            xylabels = ['Gaussian', 'K-dist(a=0.55)','K-dist(a=2.375)','K-dist(a=6.09)', 'Pareto(a=1.4)','Pareto(a=4.75)','Pareto(a=8.75)']
     elif args1.nclasses == 3:
         labels = [0,1,2]
         xylabels = ['Gaussian', 'K-dist(a=0.5)','K-dist(a=4.5)']
