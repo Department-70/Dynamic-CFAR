@@ -22,7 +22,7 @@ def create_parser():
     # High-level experiment configuration
     parser.add_argument('--exp_index', type=int, default=None, help='Experiment index')
     parser.add_argument('--exp_type', type=str, default=None, help="Experiment type")    
-    parser.add_argument('--label', type=str, default=None, help="Extra label to add to output files")
+    parser.add_argument('--label', type=str, default='Test', help="Extra label to add to output files")
     
     parser.add_argument('--results_path', type=str, default='./results', help='Results directory')
     
@@ -36,9 +36,13 @@ def create_parser():
     parser.add_argument('--a', type=int, default=1, help='Clutter distribution shape parameter.') 
     parser.add_argument('--b', type=int, default=1, help='Clutter distribution scale parameter.') 
     
-    parser.add_argument('--TH_init', nargs='+', type=float, default=[0.5,0.5,0.5,0.5,0.5], help="List of initial threshold values.") 
-    parser.add_argument('--delta', nargs='+', type=float, default=[0.05,0.05,0.05,0.05,0.05], help="List of delta values to use for threshold searches.") 
-    parser.add_argument('--a_list', nargs='+', type=float, default=[0.5,0.75,1,1.25,1.5], help="List of clutter distribution shape parameter values to use.") 
+    # parser.add_argument('--TH_init', nargs='+', type=float, default=[0.5,0.5,0.5,0.5,0.5], help="List of initial threshold values.") 
+    # parser.add_argument('--delta', nargs='+', type=float, default=[0.05,0.05,0.05,0.05,0.05], help="List of delta values to use for threshold searches.") 
+    # parser.add_argument('--a_list', nargs='+', type=float, default=[0.5,0.75,1,1.25,1.5], help="List of clutter distribution shape parameter values to use.") 
+    parser.add_argument('--TH_init', nargs='+', type=float, default=[0.2,0.2], help="List of initial threshold values.") 
+    parser.add_argument('--delta', nargs='+', type=float, default=[0.05,0.05], help="List of delta values to use for threshold searches.") 
+    parser.add_argument('--a_list', nargs='+', type=float, default=[0.5,0.75], help="List of clutter distribution shape parameter values to use.") 
+    
     
     parser.add_argument('--rho', type=float, default=0.9, help='Clutter correlation coefficient.') 
     parser.add_argument('--max_count', type=int, default=40, help='Maximum number of iterations to run during threshold search.')
@@ -46,6 +50,63 @@ def create_parser():
     parser.add_argument('--f_d', type=float, default=2e7, help='Center frequency.')
     
     return parser
+
+
+def exp_type_to_hyperparameters(args):
+    '''
+    Translate the exp_type into a hyperparameter set
+
+    :param args: ArgumentParser
+    :return: Hyperparameter set (in dictionary form)
+    -This function can allow you to set ranges for parser variables given a set 
+    exp_type label.  p is used to implement multiple experiments with a set or 
+    sweep of parameter values
+    '''
+    if args.exp_type is None:
+        p=None
+    elif args.exp_type =='CNN_sweep':
+        p = {'conv_nfilters':[5,10,20],
+             'lrate':[0.1, 0.25, 0.3, 0.4]}
+    elif args.exp_type =='CNN':
+        p = {'rotation': range(5)}
+    else:
+        assert False, "Unrecognized exp_type"
+
+    return p
+
+
+def augment_args(args):
+    '''
+    Use the jobiterator to override the specified arguments based on the experiment index.
+
+    Modifies the args
+
+    :param args: arguments from ArgumentParser
+    :return: A string representing the selection of parameters to be used in the file name
+    '''
+    
+    # Create parameter sets to execute the experiment on.  This defines the Cartesian product
+    #  of experiments that we will be executing
+    p = exp_type_to_hyperparameters(args)
+
+    # Check index number
+    index = args.exp_index
+    if(index is None):
+        return ""
+    
+    # Create the iterator, Function within job_control.py, comment away if 
+    # not using job_control for multiple jobs.
+    ji = JobIterator(p)
+    print("Total jobs:", ji.get_njobs())
+    
+    # Check bounds
+    assert (args.exp_index >= 0 and args.exp_index < ji.get_njobs()), "exp_index out of range"
+
+    # Print the parameters specific to this exp_index
+    print(ji.get_index(args.exp_index))
+    
+    # Push the attributes to the args object and return a string that describes these structures
+    return ji.set_attributes_by_index(args.exp_index, args)
 
 
 def generate_fname(args, params_str):
@@ -94,6 +155,8 @@ def execute_exp(args=None):
         parser = create_parser()
         args = parser.parse_args([])        
     #  print(args.exp_index)
+    
+    args_str = augment_args(args)
     
     PFA_max = args.target_PFA + args.PFA_margin*args.target_PFA
     PFA_min = args.target_PFA - args.PFA_margin*args.target_PFA

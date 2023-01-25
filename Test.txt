@@ -1,0 +1,15 @@
+--alg=glrt
+--dist=gaussian
+--target_PFA=0.01
+--TH_init
+0.3
+0.3
+--delta
+0.1
+0.1
+--a_list
+1.0
+1.0
+--sim_ord=10
+--max_count=40
+--label=Test_exp
