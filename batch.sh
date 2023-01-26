@@ -16,7 +16,7 @@ count=1
 while [ $count -le $2 ] 
 do
 	echo $count
-	./controller.sh $1 $count &
+	./controller.sh $1 $count $2 &
 	count=$((1+$count))
 done
 
