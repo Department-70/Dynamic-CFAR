@@ -16,5 +16,5 @@ echo "--a_list" >> $PTH
 echo $4 >> $PTH
 echo $5 >> $PTH
 
-python bashrun.py $PTH $
+python bashrun.py $PTH 
 
