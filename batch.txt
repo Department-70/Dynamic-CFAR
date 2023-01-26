@@ -1,8 +1,2 @@
---TH_init
-0.5
-0.5
---delta
-0.1
-0.1
 --sim_ord=10
 --max_count=40

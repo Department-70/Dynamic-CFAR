@@ -12,9 +12,10 @@ count=0
 while [ $count -lt $limit ] 
 do
 	cur=$(($count+$2))
-	out=$(awk -F ',' -v cur=$cur 'NR==cur {print $1 " " $2 " " $3 " " $4 " " $4}' $1)
+	out=$(awk -F ',' -v cur=$cur 'NR==cur {print $1 " " $2 " " $3}' $1)
+	out2=$(awk -F ',' -v cur=$cur 'NR==cur {print $4}' $1)
 	count=$(($3+$count))
-	./batchrun.sh $out
+	./batchrun.sh $out "$(echo $out2)"
 done
 
 
