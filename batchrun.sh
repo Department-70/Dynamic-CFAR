@@ -9,7 +9,7 @@ arr=($4)
 PTH="./results/$1_$2_$3_${arr[0]}_${arr[-1]}.txt"
 echo $PTH
 cat batch.txt > $PTH
-echo "--label=$1_$2_$3_$4" >> $PTH
+echo "--label=$1_$2_$3_${arr[0]}_${arr[-1]}" >> $PTH
 echo "--alg=$1" >> $PTH
 echo "--dist=$3" >> $PTH
 echo "--target_PFA=$2" >> $PTH
