@@ -246,7 +246,7 @@ def execute_exp(args=None):
         args = parser.parse_args([])        
     #  print(args.exp_index)
     
-    #args_str = augment_args(args)
+    args_str = augment_args(args)
     
     pulse_num = np.linspace(1,args.sample_len,args.sample_len)
     p = np.exp(-1j*2*np.pi*pulse_num*args.f_d*args.PRI)
@@ -358,7 +358,12 @@ def execute_exp(args=None):
             print('------')
         # results[j,:] = [sir[j,i],FA_CD,FA_glrt,FA_ideal]
         results[j+10,:] = [sir[j+10,i],FA_CD,FA_glrt,FA_ideal]
-
+        
+    from scipy.io import savemat
+    fbase = generate_fname(args, args_str)
+    fname_out = "%s_results.mat"%fbase
+    outputData = {'reults':results}
+    savemat(fname_out,outputData)
 
 if __name__ == "__main__":
     # Parse and check incoming arguments
