@@ -63,8 +63,11 @@ def create_parser():
     # High-level experiment configuration
     parser.add_argument('--exp_type', type=str, default=None, help="Experiment type")    
     parser.add_argument('--label', type=str, default='Raw2', help="Extra label to add to output files")
-    parser.add_argument('--dataset', type=str, default='clutter.mat', help='Data set directory')    
+    parser.add_argument('--dataset', type=str, default='./dataset/clutter.mat', help='Data set directory') 
+    parser.add_argument('--th_data', type=str, default=None, help='mat file with Thresold vectors')
+    # parser.add_argument('--th_data', type=str, default='./THdata/glrt_0.0001_K_0.10_1.00__results.mat', help='mat file with Thresold vectors')
     parser.add_argument('--results_path', type=str, default='./results', help='Results directory')
+    parser.add_argument('--shape_num', type=int, default=20000, help='Number of each shape parameter in the THdataset')
 
     # Specific experiment configuration
     parser.add_argument('--exp_index', type=int, default=None, help='Experiment index')
@@ -398,7 +401,13 @@ def execute_exp(args=None):
     # pickle files, folder structures, .mat files)     
     mat = scipy.io.loadmat(args.dataset)
     data =mat['data']
-    label = mat['label']
+    if args.th_data is None:
+        label = mat['label']
+    else:
+        TH = scipy.io.loadmat(args.th_data)
+        label_mini = TH['thresholds']
+        label = np.tile(label_mini.transpose(), (args.shape_num,1))
+        
     # data = np.reshape(dat,(8000,1024))
     if args.conv_size is None:
         class_size = int(np.round(data.shape[0]))
