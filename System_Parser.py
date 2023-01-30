@@ -48,9 +48,10 @@ def create_parser():
     parser.add_argument('--sample_len', type=int, default=16, help="Length of the sample")
     parser.add_argument('--PRI', type=float, default=1e-8, help="Pulse repetition interval")
     parser.add_argument('--f_d', type=float, default=2e7, help="Doppler frequency")
+    parser.add_argument('--target', type=bool, default=False, help="If you want the cut_target (true) or just cut (false)")
     
     parser.add_argument('--discriminator', type=str, default='./classifier/results/ordered_a_Dense200_50_drop_0_100_LR_0_000100_model', help='This is the file path to the Discriminator Model')
-    parser.add_argument('--data', type=str, default='clutter_final_G_SIR_Sweep', help='File path to the data mat file')
+    parser.add_argument('--data', type=str, default='./Datasets/clutter_final_G.mat', help='File path to the data mat file')
     
     parser.add_argument('--model_thresh4', type=str, default='./classifier/results/P_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
     parser.add_argument('--model_thresh5', type=str, default='./classifier/results/P_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
@@ -262,10 +263,29 @@ def execute_exp(args=None):
     # data = mat73.loadmat('')                  #Use this for the larger mat73 files.
     data_ss = np.squeeze(data.get("data"))
     S = np.squeeze(data.get("covar"))
+    
+    
+    
+    #---------------------------------------------------
+    # NOTE TO SELF: JOE
+    # comment in the right one below here: "cut" or "cut_target"
+    # cut = only clutter, no target
+    # cut_target = has target in the data
+    # DERP DERP
+    #---------------------------------------------------
+    if (args.target):
+        z = np.squeeze(data.get("cut_target"))
+    else:
+        z = np.squeeze(data.get("cut"))
     # z_nt = data.get("data_cut")
     # z = np.squeeze(data.get("cut"))
-    z_full = np.squeeze(data.get("cut_target"))
-    sir = np.squeeze(data.get("cut_target_SIR"))
+    # z_full = np.squeeze(data.get("cut_target"))
+    # sir = np.squeeze(data.get("cut_target_SIR"))
+    
+    #---------------------------------------------------
+    # resume code as normal below
+    #---------------------------------------------------    
+    
     # label = np.squeeze(data.get("label"))
     # shape = data.get('shape')
     
@@ -320,12 +340,12 @@ def execute_exp(args=None):
     output = np.zeros([len(data_ss),14])
     output_full = np.zeros([len(data_ss),21])
     det_final = np.zeros([len(data_ss),1])
-    results = np.zeros([len(sir),4])
+    results = np.zeros([len(z),4])
     FA_CD = 0
     FA_glrt = 0
     FA_ideal = 0
     #Run the data through the combined system.
-    for j in range(len(sir)):
+    for j in range(len(z)):
         # z = z_full[j,:,:]
         z = z_full[j+10,:,:]
         FA_CD = 0
@@ -345,9 +365,9 @@ def execute_exp(args=None):
             print('------')
             print(i)
             print(np.argmax(disc_vector))
-            print("SIR")
+            print("Z")
             # print(sir[j,i])
-            print(sir[j+10,i])
+            print(z[j+10,i])
             # print(det_final[i])
             print("Cognitive Detector")
             print(FA_CD)
@@ -357,12 +377,12 @@ def execute_exp(args=None):
             print(FA_ideal)
             print('------')
         # results[j,:] = [sir[j,i],FA_CD,FA_glrt,FA_ideal]
-        results[j+10,:] = [sir[j+10,i],FA_CD,FA_glrt,FA_ideal]
+        results[j+10,:] = [z[j+10,i],FA_CD,FA_glrt,FA_ideal]
         
     from scipy.io import savemat
     fbase = generate_fname(args, args_str)
     fname_out = "%s_results.mat"%fbase
-    outputData = {'reults':results}
+    outputData = {'reults':results, 'args':args}
     savemat(fname_out,outputData)
 
 if __name__ == "__main__":
