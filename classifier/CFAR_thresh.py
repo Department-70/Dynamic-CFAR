@@ -545,7 +545,7 @@ def execute_exp(args=None):
     fbase = generate_fname(args, args_str)
     if args.verbose >= 1:
         print(model.summary())
-        plot_model(model, to_file='%s_model_plot.png'%fbase, show_shapes=True, show_layer_names=True)
+        # plot_model(model, to_file='%s_model_plot.png'%fbase, show_shapes=True, show_layer_names=True)
     print(args)
 
     # Output file base and pkl file

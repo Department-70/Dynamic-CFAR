@@ -1,0 +1,12 @@
+--label=K_H_0_0001
+--epochs=1000
+--lrate=0.0001
+--patience=30
+--batch=1
+-vv
+--dense
+200
+50
+--dropout_dense=0.1
+--dataset=./datasets/clutter_order_K_4_5.mat
+--th_data=./THdata/glrt_0.0001_K_3.75_10.00__results.mat
