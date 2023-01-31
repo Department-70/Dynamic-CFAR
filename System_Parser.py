@@ -39,6 +39,7 @@ def create_parser():
     parser.add_argument('--label', type=str, default='Test', help="Extra label to add to output files")
     
     parser.add_argument('--results_path', type=str, default='./results', help='Results directory')
+    parser.add_argument('--v' type=int, default=0, help='How much output to print')
 
     #Expirement parameters
     parser.add_argument('--algorithm', type=str, default='amf', help='Algorithm type you want to use')
@@ -275,9 +276,9 @@ def execute_exp(args=None):
     # DERP DERP
     #---------------------------------------------------
     if (args.target):
-        z_full = np.squeeze(np.transpose(np.squeeze(data.get("cut_target")))[np.newaxis, ...])
+        z_full = np.squeeze(data.get("cut_target"))
     else:
-        z_full = np.squeeze(np.transpose(np.squeeze(data.get("cut")))[np.newaxis, ...])
+        z_full = np.squeeze(data.get("cut"))
     print(z_full.shape)
     # z_nt = data.get("data_cut")
     # z = np.squeeze(data.get("cut"))
@@ -339,46 +340,76 @@ def execute_exp(args=None):
                5 : five,
                6 : six}
     
-    output = np.zeros([len(data_ss),14])
-    output_full = np.zeros([len(data_ss),21])
-    det_final = np.zeros([len(data_ss),1])
     results = np.zeros([len(z_full),4])
     FA_CD = 0
     FA_glrt = 0
     FA_ideal = 0
     #Run the data through the combined system.
-    for j in range(len(z_full)):
-        # z = z_full[j,:,:]
-        z = z_full[j+10,:,:]
+    
+    
+    # If statment distingishes between the SIR_Sweep (3 dim) and the "normal" data (2 dim)
+    if( z_full.ndim==3):
+        for j in range(len(z_full)):
+            # z = z_full[j,:,:]
+            print(z_full.shape)
+            z = z_full[j+10,:]
+            print(z.shape)
+            FA_CD = 0
+            FA_glrt = 0
+            FA_ideal = 0
+            for i in range(len(data_ss)):
+                det, det_glrt, det_ideal = runDet(data_ss, z, S,p, models,model_disc ,options,i)
+                
+                FA_CD = FA_CD+det 
+                FA_ideal = FA_ideal + det_ideal
+                FA_glrt = FA_glrt+det_glrt
+                
+                if(args.v>=1):
+                    print('------')
+                    print(i)
+                if (args.v>=2):
+                    print(np.argmax(disc_vector))
+                    print("SIR")
+                    # print(sir[j,i])
+                    print(z_full[j+10,i])
+                    # print(det_final[i])
+                    print("Cognitive Detector")
+                    print(FA_CD)
+                    print("GLRT")
+                    print(FA_glrt)
+                    print("Ideal")
+                    print(FA_ideal)
+                    print('------')
+            # results[j,:] = [sir[j,i],FA_CD,FA_glrt,FA_ideal]
+            results[j+10,:] = [z_full[j+10,i],FA_CD,FA_glrt,FA_ideal]
+    else:
         FA_CD = 0
         FA_glrt = 0
         FA_ideal = 0
         for i in range(len(data_ss)):
-            temp = np.expand_dims(data_ss[i,:],0)
-            disc_vector = model_disc.predict(temp)
-            det = options[np.argmax(disc_vector)](temp, z[i,:], S[i,:,:])
-            det_glrt = options[0](temp, z[i,:], S[i,:,:])
-            det_ideal = options[1](temp, z[i,:], S[i,:,:])
+            det, det_glrt, det_ideal, shape_disc = runDet(data_ss, z_full, S,p, models,model_disc,options, i)
             
             FA_CD = FA_CD+det 
             FA_ideal = FA_ideal + det_ideal
             FA_glrt = FA_glrt+det_glrt
-            print('------')
-            print(i)
-            print(np.argmax(disc_vector))
-            print("SIR")
-            # print(sir[j,i])
-            print(z_full[j+10,i])
-            # print(det_final[i])
-            print("Cognitive Detector")
-            print(FA_CD)
-            print("GLRT")
-            print(FA_glrt)
-            print("Ideal")
-            print(FA_ideal)
-            print('------')
-        # results[j,:] = [sir[j,i],FA_CD,FA_glrt,FA_ideal]
-        results[j+10,:] = [z_full[j+10,i],FA_CD,FA_glrt,FA_ideal]
+            
+            if (args.v>=1):
+                print('------')
+                print(i)
+            if (args.v >=2):
+                print(shape_disc)
+                print("cut")
+                # print(sir[j,i])
+                print(z_full[i])
+                # print(det_final[i])
+                print("Cognitive Detector")
+                print(FA_CD)
+                print("GLRT")
+                print(FA_glrt)
+                print("Ideal")
+                print(FA_ideal)
+                print('------')
+        results = [FA_CD,FA_ideal,FA_glrt]
 
         
     from scipy.io import savemat
@@ -386,6 +417,22 @@ def execute_exp(args=None):
     fname_out = "%s_results.mat"%fbase
     outputData = {'reults':results, 'args':args}
     savemat(fname_out,outputData)
+    
+    
+    
+    
+def runDet(data_ss, z, S,p, models,model_disc,options, test_num):
+    temp = np.expand_dims(data_ss[test_num,:],0)
+    disc_vector = model_disc.predict(temp)
+    max_disc = np.argmax(disc_vector)
+    det = options[max_disc](args,p,temp, z[test_num], S[test_num,:,:],models[max_disc])
+    det_glrt = options[0](args,p,temp, z[test_num], S[test_num,:,:],models[0])
+    det_ideal = options[1](args,p,temp, z[test_num], S[test_num,:,:],models[1])
+    return det, det_glrt, det_ideal, np.argmax(disc_vector)
+    
+    
+    
+    
 
 if __name__ == "__main__":
     # Parse and check incoming arguments
