@@ -39,7 +39,7 @@ def create_parser():
     parser.add_argument('--label', type=str, default='Test', help="Extra label to add to output files")
     
     parser.add_argument('--results_path', type=str, default='./results', help='Results directory')
-    parser.add_argument('--v' type=int, default=0, help='How much output to print')
+    parser.add_argument('--v', type=int, default=0, help='How much output to print')
 
     #Expirement parameters
     parser.add_argument('--algorithm', type=str, default='amf', help='Algorithm type you want to use')
@@ -50,6 +50,7 @@ def create_parser():
     parser.add_argument('--PRI', type=float, default=1e-8, help="Pulse repetition interval")
     parser.add_argument('--f_d', type=float, default=2e7, help="Doppler frequency")
     parser.add_argument('--target', type=bool, default=False, help="If you want the cut_target (true) or just cut (false)")
+    parser.add_argument('--max_test', type=int, default=None, help="Limit on the maximum number of runs")
     
     parser.add_argument('--discriminator', type=str, default='./classifier/results/ordered_a_Dense200_50_drop_0_100_LR_0_000100_model', help='This is the file path to the Discriminator Model')
     parser.add_argument('--data', type=str, default='./Datasets/clutter_final_G.mat', help='File path to the data mat file')
@@ -161,49 +162,42 @@ def generate_fname(args, params_str):
 
 
 def zero(args,p,os,z,S,model_thresh):
-    print("0")
     thresh = np.asarray(cog.cogThreshold(args.algorithm,args.P_fa,args.K,args.N))
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 0")
     return det
 
 def one(args,p,os,z,S,model_thresh1):
-    print("1")
     thresh = model_thresh1.predict(os)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 1")
     return det
 
 def two(args,p,os,z,S,model_thresh2):
-    print("2")
     thresh = model_thresh2.predict(os)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 2")
     return det
 
 def three(args,p,os,z,S,model_thresh3):
-    print("3")
     thresh = model_thresh3.predict(os)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 3")
     return det
 
 def four(args,p,os,z,S,model_thresh4):
-    print("4")
     thresh = model_thresh4.predict(os)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 4")
     return det
 
 def five(args,p,os,z,S,model_thresh5):
-    print("5")
     thresh = model_thresh5.predict(os)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 5")
     return det
 
 def six(args,p,os,z,S,model_thresh6):
-    print("6")
     thresh = model_thresh6.predict(os)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 6")
@@ -337,7 +331,7 @@ def execute_exp(args=None):
             FA_CD = 0
             FA_glrt = 0
             FA_ideal = 0
-            for i in range(len(data_ss)):
+            for i in range( len(data_ss) if args.max_test is None else args.max_test):
                 det, det_glrt, det_ideal = runDet(data_ss, z, S,p, models,model_disc ,options,i)
                 
                 FA_CD = FA_CD+det 
@@ -360,13 +354,12 @@ def execute_exp(args=None):
                     print("Ideal")
                     print(FA_ideal)
                     print('------')
-            # results[j,:] = [sir[j,i],FA_CD,FA_glrt,FA_ideal]
             results[j+10,:] = [z_full[j+10,i],FA_CD,FA_glrt,FA_ideal]
     else:
         FA_CD = 0
         FA_glrt = 0
         FA_ideal = 0
-        for i in range(len(data_ss)):
+        for i in range(len(data_ss) if args.max_test is None else args.max_test):
             det, det_glrt, det_ideal, shape_disc = runDet(data_ss, z_full, S,p, models,model_disc,options, i)
             
             FA_CD = FA_CD+det 
