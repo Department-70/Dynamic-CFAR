@@ -190,9 +190,13 @@ def exp_type_to_hyperparameters(args):
     '''
     if args.exp_type is None:
         p=None
-    elif args.exp_type =='CNN_sweep':
-        p = {'conv_nfilters':[5,10,20],
-             'lrate':[0.1, 0.25, 0.3, 0.4]}
+    elif args.exp_type =='THML':
+        
+        p = {'th_data':['./THdata/glrt_0.0001_K_3.75_10.00__results.mat','./THdata/glrt_0.0002_K_3.75_10.00__results.mat',
+                        './THdata/glrt_0.0003_K_3.75_10.00__results.mat','./THdata/glrt_0.0004_K_3.75_10.00__results.mat',
+                        './THdata/glrt_0.0005_K_3.75_10.00__results.mat','./THdata/glrt_0.0006_K_3.75_10.00__results.mat',
+                        './THdata/glrt_0.0007_K_3.75_10.00__results.mat','./THdata/glrt_0.0008_K_3.75_10.00__results.mat',
+                        './THdata/glrt_0.0009_K_3.75_10.00__results.mat','./THdata/glrt_0.001_K_3.75_10.00__results.mat']}
     elif args.exp_type =='CNN':
         p = {'rotation': range(5)}
     else:
@@ -266,7 +270,8 @@ def generate_fname(args, params_str):
     parameter in the args parser can be updated to be part of the naming 
     convention.
     '''
-    
+    label_pfa = ['0_0001','0_0002','0_0003','0_0004','0_0005','0_0006',
+                 '0_0007','0_0008','0_0009','0_0010']
     # RNN information
     if args.rnn_size is None:
         rnn_str = ''
@@ -312,7 +317,7 @@ def generate_fname(args, params_str):
     if args.label is None:
         label_str = ""
     else:
-        label_str = "%s_"%args.label
+        label_str = "%s_%s"%(args.label,label_pfa[args.exp_index])
     # Conv dropout
     # if args.dropout_spatial is None:
     #     dropoutS_str = ''
@@ -336,16 +341,9 @@ def generate_fname(args, params_str):
     lrate_str = "LR_%0.6f"%args.lrate
     lrate_str= lrate_str.replace('.','_')
     # Put it all together, include a %s for each included string or argument
-    return "%s/%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"%(args.results_path,
+    return "%s/%s%s%s%s"%(args.results_path,
                                         experiment_type_str, label_str,
-                                        conv_size_str,conv_filter_str,
-                                        rnn_str,rnn_size_string,
-                                        gru_str,gru_size_string,
-                                        lstm_str, lstm_size_string,
-                                        dense_str, dense_size_str,
-                                        dropout_str, 
-                                        regularizer_l2_str,                                                                           
-                                        lrate_str)
+                                        dense_str, dense_size_str)
     '''
     Other naming examples:
     # Inception
