@@ -16,7 +16,7 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras import backend
 import scipy.io
 import Cognitive_Detector as cog
-# import mat73
+import mat73
 from sklearn.utils import shuffle
 import pickle
 import argparse
@@ -256,9 +256,10 @@ def execute_exp(args=None):
     
         
     #Load in our data and format it as necessary.
-    # data = scipy.io.loadmat('clutter_final_K_SIR_Sweep')
-    # data = scipy.io.loadmat('clutter_final_P_SIR_Sweep')
-    data = scipy.io.loadmat(args.data)               #Use this for small mat data files.
+    try: 
+        data = scipy.io.loadmat(args.data)               #Use this for small mat data files.
+    except NotImplementedError:
+        data = mat73.loadmat(args.data)  
     # data = scipy.io.loadmat('clutter_final_K_test')               #Use this for small mat data files.
     # data = mat73.loadmat('')                  #Use this for the larger mat73 files.
     data_ss = np.squeeze(data.get("data"))
@@ -274,9 +275,10 @@ def execute_exp(args=None):
     # DERP DERP
     #---------------------------------------------------
     if (args.target):
-        z = np.squeeze(data.get("cut_target"))
+        z_full = np.squeeze(np.transpose(np.squeeze(data.get("cut_target")))[np.newaxis, ...])
     else:
-        z = np.squeeze(data.get("cut"))
+        z_full = np.squeeze(np.transpose(np.squeeze(data.get("cut")))[np.newaxis, ...])
+    print(z_full.shape)
     # z_nt = data.get("data_cut")
     # z = np.squeeze(data.get("cut"))
     # z_full = np.squeeze(data.get("cut_target"))
@@ -340,12 +342,12 @@ def execute_exp(args=None):
     output = np.zeros([len(data_ss),14])
     output_full = np.zeros([len(data_ss),21])
     det_final = np.zeros([len(data_ss),1])
-    results = np.zeros([len(z),4])
+    results = np.zeros([len(z_full),4])
     FA_CD = 0
     FA_glrt = 0
     FA_ideal = 0
     #Run the data through the combined system.
-    for j in range(len(z)):
+    for j in range(len(z_full)):
         # z = z_full[j,:,:]
         z = z_full[j+10,:,:]
         FA_CD = 0
@@ -354,10 +356,9 @@ def execute_exp(args=None):
         for i in range(len(data_ss)):
             temp = np.expand_dims(data_ss[i,:],0)
             disc_vector = model_disc.predict(temp)
-            max_disc = np.argmax(disc_vector)
-            det = options[max_disc](args,p,temp, z[i,:], S[i,:,:],models[max_disc])
-            det_glrt = options[0](args,p,temp, z[i,:], S[i,:,:],models[0])
-            det_ideal = options[1](args,p,temp, z[i,:], S[i,:,:],models[1])
+            det = options[np.argmax(disc_vector)](temp, z[i,:], S[i,:,:])
+            det_glrt = options[0](temp, z[i,:], S[i,:,:])
+            det_ideal = options[1](temp, z[i,:], S[i,:,:])
             
             FA_CD = FA_CD+det 
             FA_ideal = FA_ideal + det_ideal
@@ -365,9 +366,9 @@ def execute_exp(args=None):
             print('------')
             print(i)
             print(np.argmax(disc_vector))
-            print("Z")
+            print("SIR")
             # print(sir[j,i])
-            print(z[j+10,i])
+            print(z_full[j+10,i])
             # print(det_final[i])
             print("Cognitive Detector")
             print(FA_CD)
@@ -377,7 +378,8 @@ def execute_exp(args=None):
             print(FA_ideal)
             print('------')
         # results[j,:] = [sir[j,i],FA_CD,FA_glrt,FA_ideal]
-        results[j+10,:] = [z[j+10,i],FA_CD,FA_glrt,FA_ideal]
+        results[j+10,:] = [z_full[j+10,i],FA_CD,FA_glrt,FA_ideal]
+
         
     from scipy.io import savemat
     fbase = generate_fname(args, args_str)
