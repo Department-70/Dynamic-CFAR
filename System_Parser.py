@@ -256,13 +256,14 @@ def execute_exp(args=None):
     
     
         
-    #Load in our data and format it as necessary.
+    # Load in our data and format it as necessary.
+    # Note depending on the file you are loading defines the dimensions of the data
+    # The SIR_Sweep will have 3D and the normal data will have 
     try: 
         data = scipy.io.loadmat(args.data)               #Use this for small mat data files.
     except NotImplementedError:
         data = mat73.loadmat(args.data)  
-    # data = scipy.io.loadmat('clutter_final_K_test')               #Use this for small mat data files.
-    # data = mat73.loadmat('')                  #Use this for the larger mat73 files.
+        
     data_ss = np.squeeze(data.get("data"))
     S = np.squeeze(data.get("covar"))
     
@@ -270,31 +271,18 @@ def execute_exp(args=None):
     
     #---------------------------------------------------
     # NOTE TO SELF: JOE
-    # comment in the right one below here: "cut" or "cut_target"
+    # This is not where we are distinguishing between 3 vs 2 dimensions 
+    # 
     # cut = only clutter, no target
     # cut_target = has target in the data
-    # DERP DERP
+    # HERP DERP
     #---------------------------------------------------
     if (args.target):
         z_full = np.squeeze(data.get("cut_target"))
     else:
         z_full = np.squeeze(data.get("cut"))
     print(z_full.shape)
-    # z_nt = data.get("data_cut")
-    # z = np.squeeze(data.get("cut"))
-    # z_full = np.squeeze(data.get("cut_target"))
-    # sir = np.squeeze(data.get("cut_target_SIR"))
     
-    #---------------------------------------------------
-    # resume code as normal below
-    #---------------------------------------------------    
-    
-    # label = np.squeeze(data.get("label"))
-    # shape = data.get('shape')
-    
-    # train_data_len = int(np.round(0.7*len(label)))
-    # val_data_len = int(np.round(0.2*len(label)))
-    # test_data_len = int(np.round(0.1*len(label)))
     
     #Load in the discriminator agent.
     model_disc = tf.keras.models.load_model(args.discriminator)
@@ -313,8 +301,6 @@ def execute_exp(args=None):
     
     model_final = tf.keras.models.load_model(args.model_final)
         
-        
-    
     
     models = {  0: model_thresh1,
                 1: model_thresh1,
@@ -323,13 +309,6 @@ def execute_exp(args=None):
                 4: model_thresh4,
                 5: model_thresh5,
                 6: model_thresh6}
-    
-    
-    
-    
-    
-    
-    
     
 
     options = {0 : zero,
@@ -340,6 +319,7 @@ def execute_exp(args=None):
                5 : five,
                6 : six}
     
+    # Sets up data collection and output
     results = np.zeros([len(z_full),4])
     FA_CD = 0
     FA_glrt = 0
