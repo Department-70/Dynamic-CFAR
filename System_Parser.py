@@ -167,37 +167,37 @@ def zero(args,p,os,z,S,model_thresh):
     return det
 
 def one(args,p,os,z,S,model_thresh1):
-    thresh = model_thresh1.predict(os)
+    thresh = model_thresh1.predict(os,verbose = 0)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 1")
     return det
 
 def two(args,p,os,z,S,model_thresh2):
-    thresh = model_thresh2.predict(os)
+    thresh = model_thresh2.predict(os,verbose = 0)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 2")
     return det
 
 def three(args,p,os,z,S,model_thresh3):
-    thresh = model_thresh3.predict(os)
+    thresh = model_thresh3.predict(os,verbose = 0)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 3")
     return det
 
 def four(args,p,os,z,S,model_thresh4):
-    thresh = model_thresh4.predict(os)
+    thresh = model_thresh4.predict(os,verbose = 0)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 4")
     return det
 
 def five(args,p,os,z,S,model_thresh5):
-    thresh = model_thresh5.predict(os)
+    thresh = model_thresh5.predict(os,verbose = 0)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 5")
     return det
 
 def six(args,p,os,z,S,model_thresh6):
-    thresh = model_thresh6.predict(os)
+    thresh = model_thresh6.predict(os,verbose = 0)
     det = np.asarray(cog.cogDetector(args.algorithm, z, p, S, thresh))
     # print("Detector 6")
     return det
@@ -282,14 +282,22 @@ def execute_exp(args=None):
     
     #Load in the threshold setting models.
     ##These are the models that I trained on the order statistics for PFA=10^-4.
-    model_thresh4 = tf.keras.models.load_model(args.model_thresh4)
-    model_thresh5 = tf.keras.models.load_model(args.model_thresh5)
-    model_thresh6 = tf.keras.models.load_model(args.model_thresh6)
+    model_thresh4 = tf.keras.models.load_model(args.model_thresh4, compile=False)
+    model_thresh5 = tf.keras.models.load_model(args.model_thresh5, compile=False)
+    model_thresh6 = tf.keras.models.load_model(args.model_thresh6, compile=False)
+    
+    model_thresh4.compile()
+    model_thresh5.compile()
+    model_thresh6.compile()
     
     ##These are the models that I trained on the order statistics for PFA=10^-4.
-    model_thresh1 = tf.keras.models.load_model(args.model_thresh1)
-    model_thresh2 = tf.keras.models.load_model(args.model_thresh2)
-    model_thresh3 = tf.keras.models.load_model(args.model_thresh3)
+    model_thresh1 = tf.keras.models.load_model(args.model_thresh1, compile=False)
+    model_thresh2 = tf.keras.models.load_model(args.model_thresh2, compile=False)
+    model_thresh3 = tf.keras.models.load_model(args.model_thresh3, compile=False)
+    
+    model_thresh1.compile()
+    model_thresh2.compile()
+    model_thresh3.compile()
     
     model_final = tf.keras.models.load_model(args.model_final)
         
@@ -394,7 +402,7 @@ def execute_exp(args=None):
 def runDet(data_ss, z, S,p, models,model_disc,options, test_num, args):
     
     temp = np.expand_dims(data_ss[test_num,:],0)
-    disc_vector = model_disc.predict(temp)
+    disc_vector = model_disc.predict(temp,verbose = 0)
     max_disc = np.argmax(disc_vector)
     
     det = options[max_disc](args,p,temp, z, S,models[max_disc])
