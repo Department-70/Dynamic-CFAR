@@ -23,7 +23,6 @@ import argparse
 from job_control import *
 
 
-
 def create_parser():
     '''
     Create argument parser
@@ -275,7 +274,6 @@ def execute_exp(args=None):
         z_full = np.squeeze(data.get("cut_target"))
     else:
         z_full = np.squeeze(data.get("cut"))
-    print(z_full.shape)
     
     
     #Load in the discriminator agent.
@@ -325,14 +323,12 @@ def execute_exp(args=None):
     if( z_full.ndim==3):
         for j in range(len(z_full)):
             # z = z_full[j,:,:]
-            print(z_full.shape)
             z = z_full[j+10,:]
-            print(z.shape)
             FA_CD = 0
             FA_glrt = 0
             FA_ideal = 0
             for i in range( len(data_ss) if args.max_test is None else args.max_test):
-                det, det_glrt, det_ideal = runDet(data_ss, z, S,p, models,model_disc ,options,i)
+                det, det_glrt, det_ideal = runDet(data_ss, z, S,p, models,model_disc ,options,i, args)
                 
                 FA_CD = FA_CD+det 
                 FA_ideal = FA_ideal + det_ideal
@@ -360,7 +356,8 @@ def execute_exp(args=None):
         FA_glrt = 0
         FA_ideal = 0
         for i in range(len(data_ss) if args.max_test is None else args.max_test):
-            det, det_glrt, det_ideal, shape_disc = runDet(data_ss, z_full, S,p, models,model_disc,options, i)
+            
+            det, det_glrt, det_ideal, shape_disc = runDet(data_ss, z_full[i],  S[i,:,:],p, models,model_disc,options, i,args)
             
             FA_CD = FA_CD+det 
             FA_ideal = FA_ideal + det_ideal
@@ -387,20 +384,23 @@ def execute_exp(args=None):
         
     from scipy.io import savemat
     fbase = generate_fname(args, args_str)
+    save = {'results': results}
     fname_out = "%s_results.mat"%fbase
-    outputData = {'reults':results, 'args':args}
-    savemat(fname_out,outputData)
+    savemat(fname_out,save)
     
     
     
     
-def runDet(data_ss, z, S,p, models,model_disc,options, test_num):
+def runDet(data_ss, z, S,p, models,model_disc,options, test_num, args):
+    
     temp = np.expand_dims(data_ss[test_num,:],0)
     disc_vector = model_disc.predict(temp)
     max_disc = np.argmax(disc_vector)
-    det = options[max_disc](args,p,temp, z[test_num], S[test_num,:,:],models[max_disc])
-    det_glrt = options[0](args,p,temp, z[test_num], S[test_num,:,:],models[0])
-    det_ideal = options[1](args,p,temp, z[test_num], S[test_num,:,:],models[1])
+    
+    det = options[max_disc](args,p,temp, z, S,models[max_disc])
+    det_glrt = options[0](args,p,temp, z, S,models[0])
+    
+    det_ideal = options[1](args,p,temp, z, S,models[1])
     return det, det_glrt, det_ideal, np.argmax(disc_vector)
     
     
@@ -408,6 +408,7 @@ def runDet(data_ss, z, S,p, models,model_disc,options, test_num):
     
 
 if __name__ == "__main__":
+    #
     # Parse and check incoming arguments
     parser = create_parser()
     args = parser.parse_args()
