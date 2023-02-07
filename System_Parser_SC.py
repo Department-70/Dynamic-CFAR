@@ -90,6 +90,7 @@ def exp_type_to_hyperparameters(args):
         p=None
     elif args.exp_type =='sys_sweep':        
         p = {'P_fa':[0.0001,0.0002,0.0003,0.0004,0.0005,0.0006,0.0007,0.0008,0.0009,0.001],
+             'rotation':[1,2,3,4,5,6,7,8,9,10],
              'target':[False,True]}
     elif args.exp_type =='CNN':
         p = {'rotation': range(5)}
@@ -165,10 +166,14 @@ def generate_fname(args, params_str):
         rot_str=""
     else:
         rot_str="rot_%sof%s"%(args.rotation,args.partition)
+    if args.algorithm == 'glrt':
+        alg_str =''
+    else:
+        alg_str ='%s_'%args.algorithm
 
     # Put it all together, include a %s for each included string or argument
-    return "%s/%s%s%s_%s%s"%(args.results_path,
-                                        experiment_type_str, label_str, args.P_fa, target_str, rot_str)
+    return "%s/%s%s%s%s_%s%s"%(args.results_path,
+                                        experiment_type_str, label_str,alg_str, args.P_fa, target_str, rot_str)
 
 
 
@@ -296,92 +301,120 @@ def execute_exp(args=None):
             S = S[(args.rotation-1)*data_partition:,:,:]
             z_full =  z_full[(args.rotation-1)*data_partition:,:]  
         
-    
+    if args.algorithm == 'glrt':
     
     #Load in the discriminator agent.
-    model_disc = tf.keras.models.load_model(args.discriminator, compile=False)
-    model_disc.compile(optimizer='adam')
-    thmodel = args.model_name
-    thmodel_0, thmodel_1 = thmodel.rsplit('*')
-    model_th1 = '%s%s_%s_%s%s'%(thmodel_0,'K','L',args.P_fa,thmodel_1)
-    model_th2 = '%s%s_%s_%s%s'%(thmodel_0,'K','M',args.P_fa,thmodel_1)
-    model_th3 = '%s%s_%s_%s%s'%(thmodel_0,'K','H',args.P_fa,thmodel_1)
-    model_th4 = '%s%s_%s_%s%s'%(thmodel_0,'P','L',args.P_fa,thmodel_1)
-    model_th5 = '%s%s_%s_%s%s'%(thmodel_0,'P','M',args.P_fa,thmodel_1)
-    model_th6 = '%s%s_%s_%s%s'%(thmodel_0,'P','H',args.P_fa,thmodel_1)
-    
-    
-    #Load in the threshold setting models.
-    ##These are the models that I trained on the order statistics for PFA=10^-4.
-    model_thresh4 = tf.keras.models.load_model(model_th4, compile=False)
-    model_thresh4.compile(optimizer='adam')
-    model_thresh5 = tf.keras.models.load_model(model_th5, compile=False)
-    model_thresh5.compile(optimizer='adam')
-    model_thresh6 = tf.keras.models.load_model(model_th6, compile=False)
-    model_thresh6.compile(optimizer='adam')
-    
-    ##These are the models that I trained on the order statistics for PFA=10^-4.
-    model_thresh1 = tf.keras.models.load_model(model_th1, compile=False)
-    model_thresh1.compile(optimizer='adam')
-    model_thresh2 = tf.keras.models.load_model(model_th2, compile=False)
-    model_thresh2.compile(optimizer='adam')
-    model_thresh3 = tf.keras.models.load_model(model_th3, compile=False)
-    model_thresh3.compile(optimizer='adam')
-    
-    model_final = tf.keras.models.load_model(args.model_final, compile=False)
-    model_final.compile(optimizer='adam')
+        model_disc = tf.keras.models.load_model(args.discriminator, compile=False)
+        model_disc.compile(optimizer='adam')
+        thmodel = args.model_name
+        thmodel_0, thmodel_1 = thmodel.rsplit('*')
+        model_th1 = '%s%s_%s_%s%s'%(thmodel_0,'K','L',args.P_fa,thmodel_1)
+        model_th2 = '%s%s_%s_%s%s'%(thmodel_0,'K','M',args.P_fa,thmodel_1)
+        model_th3 = '%s%s_%s_%s%s'%(thmodel_0,'K','H',args.P_fa,thmodel_1)
+        model_th4 = '%s%s_%s_%s%s'%(thmodel_0,'P','L',args.P_fa,thmodel_1)
+        model_th5 = '%s%s_%s_%s%s'%(thmodel_0,'P','M',args.P_fa,thmodel_1)
+        model_th6 = '%s%s_%s_%s%s'%(thmodel_0,'P','H',args.P_fa,thmodel_1)
+        
+        
+        #Load in the threshold setting models.
+        ##These are the models that I trained on the order statistics for PFA=10^-4.
+        model_thresh4 = tf.keras.models.load_model(model_th4, compile=False)
+        model_thresh4.compile(optimizer='adam')
+        model_thresh5 = tf.keras.models.load_model(model_th5, compile=False)
+        model_thresh5.compile(optimizer='adam')
+        model_thresh6 = tf.keras.models.load_model(model_th6, compile=False)
+        model_thresh6.compile(optimizer='adam')
+        
+        ##These are the models that I trained on the order statistics for PFA=10^-4.
+        model_thresh1 = tf.keras.models.load_model(model_th1, compile=False)
+        model_thresh1.compile(optimizer='adam')
+        model_thresh2 = tf.keras.models.load_model(model_th2, compile=False)
+        model_thresh2.compile(optimizer='adam')
+        model_thresh3 = tf.keras.models.load_model(model_th3, compile=False)
+        model_thresh3.compile(optimizer='adam')
+        
+        model_final = tf.keras.models.load_model(args.model_final, compile=False)
+        model_final.compile(optimizer='adam')
+            
+        
+        models = {  0: model_thresh1,
+                    1: model_thresh1,
+                    2: model_thresh2,
+                    3: model_thresh3,
+                    4: model_thresh4,
+                    5: model_thresh5,
+                    6: model_thresh6}
         
     
-    models = {  0: model_thresh1,
-                1: model_thresh1,
-                2: model_thresh2,
-                3: model_thresh3,
-                4: model_thresh4,
-                5: model_thresh5,
-                6: model_thresh6}
-    
-
-    options = {0 : zero,
-               1 : one,
-               2 : two,
-               3 : three,
-               4 : four,
-               5 : five,
-               6 : six}
-    
-    # Sets up data collection and output
-    results = np.zeros([len(z_full),4])
-    FA_CD = 0
-    FA_glrt = 0
-    FA_ideal = 0
-    #Run the data through the combined system.
-    
-    
-    # If statment distingishes between the SIR_Sweep (3 dim) and the "normal" data (2 dim)
-    if( z_full.ndim==3):
-        for j in range(len(z_full)):
-            # z = z_full[j,:,:]
-            print(z_full.shape)
-            z = z_full[j+10,:]
-            print(z.shape)
+        options = {0 : zero,
+                   1 : one,
+                   2 : two,
+                   3 : three,
+                   4 : four,
+                   5 : five,
+                   6 : six}
+        
+        # Sets up data collection and output
+        results = np.zeros([len(z_full),4])
+        FA_CD = 0
+        FA_glrt = 0
+        FA_ideal = 0
+        #Run the data through the combined system.
+        
+        
+        # If statment distingishes between the SIR_Sweep (3 dim) and the "normal" data (2 dim)
+        if( z_full.ndim==3):
+            for j in range(len(z_full)):
+                # z = z_full[j,:,:]
+                print(z_full.shape)
+                z = z_full[j+10,:]
+                print(z.shape)
+                FA_CD = 0
+                FA_glrt = 0
+                FA_ideal = 0
+                for i in range( len(data_ss) if args.max_test is None else args.max_test):
+                    det, det_glrt, det_ideal = runDet(data_ss, z, S,p, models,model_disc ,options,i)
+                    
+                    FA_CD = FA_CD+det 
+                    FA_ideal = FA_ideal + det_ideal
+                    FA_glrt = FA_glrt+det_glrt
+                    
+                    if(args.v>=1):
+                        print('------')
+                        print(i)
+                    if (args.v>=2):
+                        print(np.argmax(disc_vector))
+                        print("SIR")
+                        # print(sir[j,i])
+                        print(z_full[j+10,i])
+                        # print(det_final[i])
+                        print("Cognitive Detector")
+                        print(FA_CD)
+                        print("GLRT")
+                        print(FA_glrt)
+                        print("Ideal")
+                        print(FA_ideal)
+                        print('------')
+                results[j+10,:] = [z_full[j+10,i],FA_CD,FA_glrt,FA_ideal]
+        else:
             FA_CD = 0
             FA_glrt = 0
             FA_ideal = 0
-            for i in range( len(data_ss) if args.max_test is None else args.max_test):
-                det, det_glrt, det_ideal = runDet(data_ss, z, S,p, models,model_disc ,options,i)
+            for i in range(len(data_ss) if args.max_test is None else args.max_test):
+                det, det_glrt, det_ideal, shape_disc = runDet(args,data_ss, z_full, S,p, models,model_disc,options, i)
                 
                 FA_CD = FA_CD+det 
                 FA_ideal = FA_ideal + det_ideal
                 FA_glrt = FA_glrt+det_glrt
                 
-                if(args.v>=1):
+                if (args.verbose>=1):
                     print('------')
                     print(i)
-                if (args.v>=2):
-                    print(np.argmax(disc_vector))
-                    print("SIR")
+                if (args.verbose >=2):
+                    print(shape_disc)
+                    print("cut")
                     # print(sir[j,i])
-                    print(z_full[j+10,i])
+                    print(z_full[i])
                     # print(det_final[i])
                     print("Cognitive Detector")
                     print(FA_CD)
@@ -390,35 +423,28 @@ def execute_exp(args=None):
                     print("Ideal")
                     print(FA_ideal)
                     print('------')
-            results[j+10,:] = [z_full[j+10,i],FA_CD,FA_glrt,FA_ideal]
+            results = [FA_CD,FA_ideal,FA_glrt]
     else:
-        FA_CD = 0
-        FA_glrt = 0
-        FA_ideal = 0
+        FA_test = 0
+        model=''
         for i in range(len(data_ss) if args.max_test is None else args.max_test):
-            det, det_glrt, det_ideal, shape_disc = runDet(args,data_ss, z_full, S,p, models,model_disc,options, i)
+            temp = np.expand_dims(data_ss[i,:],0)
+            det = zero(args,p,temp, z_full[i], S[i,:,:],model)
             
-            FA_CD = FA_CD+det 
-            FA_ideal = FA_ideal + det_ideal
-            FA_glrt = FA_glrt+det_glrt
+            FA_test = FA_test+det 
             
             if (args.verbose>=1):
                 print('------')
                 print(i)
             if (args.verbose >=2):
-                print(shape_disc)
                 print("cut")
                 # print(sir[j,i])
                 print(z_full[i])
                 # print(det_final[i])
-                print("Cognitive Detector")
-                print(FA_CD)
-                print("GLRT")
-                print(FA_glrt)
-                print("Ideal")
-                print(FA_ideal)
+                print(args.algorithm)
+                print(FA_test)
                 print('------')
-        results = [FA_CD,FA_ideal,FA_glrt]
+        results =  FA_test   
     directory= os.getcwd()
     if not os.path.isdir('%s%s'%(directory,'/results/')):
         os.makedirs('%s%s'%(directory,'/results/'))    
@@ -426,7 +452,10 @@ def execute_exp(args=None):
     fbase = generate_fname(args, args_str)
     fname_out = "%s_results.mat"%fbase
     total_run=len(data_ss) if args.max_test is None else args.max_test
-    outputData = {'FA_CD':results[0],'FA_KL':results[1],'FA_gauss':results[2],'data_run':total_run}
+    if args.algorithm == 'glrt':
+        outputData = {'FA_CD':results[0],'FA_KL':results[1],'FA_gauss':results[2],'data_run':total_run}
+    else:
+        outputData = {'FA_%s'%(args.algorithm):results,'data_run':total_run}
     savemat(fname_out,outputData)
     
     

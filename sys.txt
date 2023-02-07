@@ -1,5 +1,4 @@
 --exp_type=sys_sweep
 --label=PFA
 --data=./datasets/clutter_final_G.mat
--v
 --partition=10
