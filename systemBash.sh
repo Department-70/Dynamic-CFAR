@@ -11,8 +11,8 @@ then
 	echo "More then 7 kernals not recomended, if you really want to do this, go into the code to change it" 
 	exit 1
 fi
-count=1
-while [ $count -le $2 ] 
+count=0
+while [ $count -lt $2 ] 
 do
 	echo $count
 	./Systemcontroller.sh $1 $count $2 &
