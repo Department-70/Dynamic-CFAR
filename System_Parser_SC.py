@@ -60,6 +60,7 @@ def create_parser():
     parser.add_argument('--discriminator', type=str, default='./models/ordered_a_Dense200_50_drop_0_100_LR_0_000100_model', help='This is the file path to the Discriminator Model')
     parser.add_argument('--data', type=str, default='./datasets/clutter_final_G.mat', help='File path to the data mat file')
     parser.add_argument('--model_name', type=str, default='./models/*_Dense200_50_drop_0_100_LR_0_000100_model', help='File naming convention for threshold model')
+    parser.add_argument('--th_name', type=str, default='./THdata/*_gaussian_1_1__results.mat', help='File naming convention for threshold data')
     # parser.add_argument('--model_thresh4', type=str, default='./classifier/results/P_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
     # parser.add_argument('--model_thresh5', type=str, default='./classifier/results/P_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
     # parser.add_argument('--model_thresh6', type=str, default='./classifier/results/P_84_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
@@ -427,10 +428,13 @@ def execute_exp(args=None):
     else:
         FA_test = 0
         model=''
-        for i in range(len(data_ss) if args.max_test is None else args.max_test):
-            temp = np.expand_dims(data_ss[i,:],0)
-            det = zero(args,p,temp, z_full[i], S[i,:,:],model)
-            
+        for i in range(len(data_ss) if args.max_test is None else args.max_test): 
+            thname = args.th_name
+            thname_0, thname_1 = thname.rsplit('*')
+            th_location = '%s%s_%s%s'%(thname_0,args.algorithm,args.P_fa,thname_1)
+            thdata = scipy.io.loadmat(th_location)
+            thresh = thdata.get("thresholds")
+            det = np.asarray(cog.cogDetector(args.algorithm, z_full[i], p, S[i,:,:], thresh[0,0]))
             FA_test = FA_test+det 
             
             if (args.verbose>=1):
