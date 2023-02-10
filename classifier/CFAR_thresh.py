@@ -54,7 +54,7 @@ def create_parser():
     # High-level commands
     parser.add_argument('--check', action='store_true', help='Check results for completeness')
     parser.add_argument('--nogo', action='store_true', help='Do not perform the experiment')
-    parser.add_argument('--verbose', '-v', action='count', default=2, help="Verbosity level")
+    parser.add_argument('--verbose', '-v', action='count', default=0, help="Verbosity level")
     parser.add_argument('--testing', action='store_true',help='Do to perform testing evaluation')
     # CPU/GPU
     parser.add_argument('--cpus_per_task', type=int, default=None, help="Number of threads to consume")
@@ -62,9 +62,12 @@ def create_parser():
 
     # High-level experiment configuration
     parser.add_argument('--exp_type', type=str, default=None, help="Experiment type")    
-    parser.add_argument('--label', type=str, default='Raw2', help="Extra label to add to output files")
-    parser.add_argument('--dataset', type=str, default='./dataset/clutter.mat', help='Data set directory') 
-    parser.add_argument('--th_data', type=str, default=None, help='mat file with Thresold vectors')
+    parser.add_argument('--label', type=str, default=None, help="Extra label to add to output files")
+    parser.add_argument('--dataset', type=str, default='./datasets/clutter_order_*.mat', help='Data set directory') 
+    parser.add_argument('--th_data', type=str, default='./TH_data/TH_sweep_*.mat', help='mat file with Thresold vectors')
+    parser.add_argument('--dist_type', type=str, default='K', help='mat file with Thresold vectors')
+    parser.add_argument('--range', type=str, default="L", help='mat file with Thresold vectors')
+    parser.add_argument('--PFA', type=float, default=0.001, help='mat file with Thresold vectors')
     # parser.add_argument('--th_data', type=str, default='./THdata/glrt_0.0001_K_0.10_1.00__results.mat', help='mat file with Thresold vectors')
     parser.add_argument('--results_path', type=str, default='./results', help='Results directory')
     parser.add_argument('--shape_num', type=int, default=20000, help='Number of each shape parameter in the THdataset')
@@ -90,8 +93,8 @@ def create_parser():
     parser.add_argument('--dropout_rnn', type=float, default=0.0, help='Dropout rate')
     parser.add_argument('--L2_rnn', type=float, default=None, help="L2 regularization in inception parameter")
     
-    parser.add_argument('--dense', nargs='+', type=int, default=[500, 250,50], help='Number of hidden units per layer (sequence of ints)')
-    parser.add_argument('--dropout_dense', type=float, default=0.2, help='Dropout rate')
+    parser.add_argument('--dense', nargs='+', type=int, default=[200,50], help='Number of hidden units per layer (sequence of ints)')
+    parser.add_argument('--dropout_dense', type=float, default=0.1, help='Dropout rate')
     parser.add_argument('--L2_dense', type=float, default=None, help="L2 regularization parameter")
     # Early stopping
     parser.add_argument('--min_delta', type=float, default=0.0, help="Minimum delta for early termination")
@@ -192,11 +195,9 @@ def exp_type_to_hyperparameters(args):
         p=None
     elif args.exp_type =='THML':
         
-        p = {'th_data':['./THdata/glrt_0.0001_K_3.75_10.00__results.mat','./THdata/glrt_0.0002_K_3.75_10.00__results.mat',
-                        './THdata/glrt_0.0003_K_3.75_10.00__results.mat','./THdata/glrt_0.0004_K_3.75_10.00__results.mat',
-                        './THdata/glrt_0.0005_K_3.75_10.00__results.mat','./THdata/glrt_0.0006_K_3.75_10.00__results.mat',
-                        './THdata/glrt_0.0007_K_3.75_10.00__results.mat','./THdata/glrt_0.0008_K_3.75_10.00__results.mat',
-                        './THdata/glrt_0.0009_K_3.75_10.00__results.mat','./THdata/glrt_0.001_K_3.75_10.00__results.mat']}
+        p = {'PFA':[0.0002,0.0003,0.0004,0.0005,0.0006,0.0007,0.0008,0.0009,0.001],
+             'dist_type':['K','P'],
+             'range':['L','M','H']}
     elif args.exp_type =='CNN':
         p = {'rotation': range(5)}
     else:
@@ -270,8 +271,6 @@ def generate_fname(args, params_str):
     parameter in the args parser can be updated to be part of the naming 
     convention.
     '''
-    label_pfa = ['0_0001','0_0002','0_0003','0_0004','0_0005','0_0006',
-                 '0_0007','0_0008','0_0009','0_0010']
     # RNN information
     if args.rnn_size is None:
         rnn_str = ''
@@ -315,9 +314,9 @@ def generate_fname(args, params_str):
         dropout_str = dropout_str .replace('.','_') 
     # Label
     if args.label is None:
-        label_str = ""
+        label_str = "%s_%s_%0.4f"%(args.dist_type,args.range,args.PFA)
     else:
-        label_str = "%s_%s"%(args.label,label_pfa[args.exp_index])
+        label_str = "%s_%s_%0.4f_%s"%(args.dist_type,args.range,args.PFA,args.label)
     # Conv dropout
     # if args.dropout_spatial is None:
     #     dropoutS_str = ''
@@ -397,14 +396,21 @@ def execute_exp(args=None):
     #Importing Data, Many ways to do this.  Included is a data generator method 
     #using the function from suplement file (multiple methods available including
     # pickle files, folder structures, .mat files)     
-    mat = scipy.io.loadmat(args.dataset)
+    datname = args.dataset
+    datname_0, datname_1 = datname.rsplit('*')
+    dataset = '%s%s_%s%s'%(datname_0,args.dist_type, args.range, datname_1)
+    mat = scipy.io.loadmat(dataset)
     data =mat['data']
     if args.th_data is None:
         label = mat['label']
     else:
-        TH = scipy.io.loadmat(args.th_data)
-        label_mini = TH['thresholds']
-        label = np.tile(label_mini.transpose(), (args.shape_num,1))
+        thname = args.th_data
+        thname_0, thname_1 = thname.rsplit('*')
+        th_data = '%s%s_%s_%0.4f%s'%(thname_0,args.dist_type, args.range, args.PFA,thname_1)
+        TH = scipy.io.loadmat(th_data)
+        call_label='TH_lst_%s%s'%(args.dist_type, args.range)
+        label_mini = TH[call_label]
+        label = np.tile(label_mini, (args.shape_num,1))
         
     # data = np.reshape(dat,(8000,1024))
     if args.conv_size is None:
@@ -656,7 +662,7 @@ def display_Metrics(args1, test=False,save=False):
     #extract validation accuracy, and testing accuracy
     for res_temp in results:
         train_acc1.append(res_temp['history']['mean_absolute_error'])
-        val_acc1.append(res_temp['history']['mean_absolute_error'])      
+        val_acc1.append(res_temp['history']['val_mean_absolute_error'])      
         
         # train_acc1.append(res_temp['history']['mean_square_error'])
         # val_acc1.append(res_temp['history']['mean_square_error'])

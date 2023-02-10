@@ -1,4 +1,6 @@
 --exp_type=sys_sweep
---label=PFA
---data=./datasets/clutter_final_G.mat
+--label=K_new
+--data=./datasets/clutter_final_K_short.mat
 --partition=10
+--P_fa=0.001
+--model_name=./models/THML_*Dense200_50_model

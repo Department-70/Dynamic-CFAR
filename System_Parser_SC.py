@@ -58,17 +58,17 @@ def create_parser():
     parser.add_argument('--max_test', type=int, default=None, help="Limit on the maximum number of runs")
     
     parser.add_argument('--discriminator', type=str, default='./models/ordered_a_Dense200_50_drop_0_100_LR_0_000100_model', help='This is the file path to the Discriminator Model')
-    parser.add_argument('--data', type=str, default='./datasets/clutter_final_G.mat', help='File path to the data mat file')
+    parser.add_argument('--data', type=str, default='./datasets/clutter_final_P.mat', help='File path to the data mat file')
     parser.add_argument('--model_name', type=str, default='./models/*_Dense200_50_drop_0_100_LR_0_000100_model', help='File naming convention for threshold model')
     parser.add_argument('--th_name', type=str, default='./THdata/*_gaussian_1_1__results.mat', help='File naming convention for threshold data')
-    # parser.add_argument('--model_thresh4', type=str, default='./classifier/results/P_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
-    # parser.add_argument('--model_thresh5', type=str, default='./classifier/results/P_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
-    # parser.add_argument('--model_thresh6', type=str, default='./classifier/results/P_84_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
+    parser.add_argument('--model_thresh4', type=str, default='./models/P_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
+    parser.add_argument('--model_thresh5', type=str, default='./models/P_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
+    parser.add_argument('--model_thresh6', type=str, default='./models/P_84_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
 
-    # parser.add_argument('--model_thresh1', type=str, default='./classifier/results/K_54_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
-    # parser.add_argument('--model_thresh2', type=str, default='./classifier/results/K_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
-    # parser.add_argument('--model_thresh3', type=str, default='./classifier/results/K_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
-    
+    parser.add_argument('--model_thresh1', type=str, default='./models/K_54_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
+    parser.add_argument('--model_thresh2', type=str, default='./models/K_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
+    parser.add_argument('--model_thresh3', type=str, default='./models/K_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
+    parser.add_argument('--model_original', action='store_true', help='Flag to run original models')
     parser.add_argument('--model_final', type=str, default='./models/G_GF4_Dense500_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
 
     parser.add_argument('--alg', type=str, default='glrt', help="Adaptive detection algorithm to use.")
@@ -306,15 +306,24 @@ def execute_exp(args=None):
     
     #Load in the discriminator agent.
         model_disc = tf.keras.models.load_model(args.discriminator, compile=False)
-        model_disc.compile(optimizer='adam')
-        thmodel = args.model_name
-        thmodel_0, thmodel_1 = thmodel.rsplit('*')
-        model_th1 = '%s%s_%s_%s%s'%(thmodel_0,'K','L',args.P_fa,thmodel_1)
-        model_th2 = '%s%s_%s_%s%s'%(thmodel_0,'K','M',args.P_fa,thmodel_1)
-        model_th3 = '%s%s_%s_%s%s'%(thmodel_0,'K','H',args.P_fa,thmodel_1)
-        model_th4 = '%s%s_%s_%s%s'%(thmodel_0,'P','L',args.P_fa,thmodel_1)
-        model_th5 = '%s%s_%s_%s%s'%(thmodel_0,'P','M',args.P_fa,thmodel_1)
-        model_th6 = '%s%s_%s_%s%s'%(thmodel_0,'P','H',args.P_fa,thmodel_1)
+        model_disc.compile(optimizer='adam')   
+        if args.model_original:
+            model_th1 = args.model_thresh1
+            model_th2 = args.model_thresh2
+            model_th3 = args.model_thresh3
+            model_th4 = args.model_thresh4
+            model_th5 = args.model_thresh5
+            model_th6 = args.model_thresh6    
+        else: 
+
+            thmodel = args.model_name
+            thmodel_0, thmodel_1 = thmodel.rsplit('*')
+            model_th1 = '%s%s_%s_%0.4f%s'%(thmodel_0,'K','L',args.P_fa,thmodel_1)
+            model_th2 = '%s%s_%s_%0.4f%s'%(thmodel_0,'K','M',args.P_fa,thmodel_1)
+            model_th3 = '%s%s_%s_%0.4f%s'%(thmodel_0,'K','H',args.P_fa,thmodel_1)
+            model_th4 = '%s%s_%s_%0.4f%s'%(thmodel_0,'P','L',args.P_fa,thmodel_1)
+            model_th5 = '%s%s_%s_%0.4f%s'%(thmodel_0,'P','M',args.P_fa,thmodel_1)
+            model_th6 = '%s%s_%s_%0.4f%s'%(thmodel_0,'P','H',args.P_fa,thmodel_1)
         
         
         #Load in the threshold setting models.
@@ -401,13 +410,14 @@ def execute_exp(args=None):
             FA_CD = 0
             FA_glrt = 0
             FA_ideal = 0
+            disc_select =[]
             for i in range(len(data_ss) if args.max_test is None else args.max_test):
                 det, det_glrt, det_ideal, shape_disc = runDet(args,data_ss, z_full, S,p, models,model_disc,options, i)
                 
                 FA_CD = FA_CD+det 
                 FA_ideal = FA_ideal + det_ideal
                 FA_glrt = FA_glrt+det_glrt
-                
+                disc_select = np.append(disc_select,shape_disc)
                 if (args.verbose>=1):
                     print('------')
                     print(i)
@@ -424,7 +434,7 @@ def execute_exp(args=None):
                     print("Ideal")
                     print(FA_ideal)
                     print('------')
-            results = [FA_CD,FA_ideal,FA_glrt]
+            results = [FA_CD,FA_ideal,FA_glrt, disc_select]
     else:
         FA_test = 0
         model=''
@@ -457,7 +467,7 @@ def execute_exp(args=None):
     fname_out = "%s_results.mat"%fbase
     total_run=len(data_ss) if args.max_test is None else args.max_test
     if args.algorithm == 'glrt':
-        outputData = {'FA_CD':results[0],'FA_KL':results[1],'FA_gauss':results[2],'data_run':total_run}
+        outputData = {'FA_CD':results[0],'FA_KL':results[1],'FA_gauss':results[2],'data_run':total_run, 'selected':disc_select}
     else:
         outputData = {'FA_%s'%(args.algorithm):results,'data_run':total_run}
     savemat(fname_out,outputData)
