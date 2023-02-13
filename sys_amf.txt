@@ -1,0 +1,5 @@
+--exp_type=amf_sweep
+--label=K
+--data=./datasets/clutter_final_K_short.mat
+--algorithm=amf
+--partition=200

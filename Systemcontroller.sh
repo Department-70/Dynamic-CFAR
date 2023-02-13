@@ -15,7 +15,7 @@ do
 	cur=$(($count+$2))
 	count=$(($3+$count))
 	echo "Controller running on ${array[$cur]}"
-	python System_Parser_SC.py @sys.txt --exp_index "${array[$cur]}"
+	python System_Parser_SC.py @sys_amf.txt --exp_index "${array[$cur]}"
 	
 done
 

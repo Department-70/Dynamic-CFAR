@@ -60,7 +60,7 @@ def create_parser():
     parser.add_argument('--discriminator', type=str, default='./models/ordered_a_Dense200_50_drop_0_100_LR_0_000100_model', help='This is the file path to the Discriminator Model')
     parser.add_argument('--data', type=str, default='./datasets/clutter_final_P.mat', help='File path to the data mat file')
     parser.add_argument('--model_name', type=str, default='./models/*_Dense200_50_drop_0_100_LR_0_000100_model', help='File naming convention for threshold model')
-    parser.add_argument('--th_name', type=str, default='./THdata/*_gaussian_1_1__results.mat', help='File naming convention for threshold data')
+    parser.add_argument('--th_name', type=str, default='./THdata/TH_sweep_*.mat', help='File naming convention for threshold data')
     parser.add_argument('--model_thresh4', type=str, default='./models/P_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
     parser.add_argument('--model_thresh5', type=str, default='./models/P_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
     parser.add_argument('--model_thresh6', type=str, default='./models/P_84_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
@@ -90,11 +90,13 @@ def exp_type_to_hyperparameters(args):
     if args.exp_type is None:
         p=None
     elif args.exp_type =='sys_sweep':        
-        p = {'P_fa':[0.0001,0.0002,0.0003,0.0004,0.0005,0.0006,0.0007,0.0008,0.0009,0.001],
+        p = {'P_fa':[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
              'rotation':[1,2,3,4,5,6,7,8,9,10],
              'target':[False,True]}
-    elif args.exp_type =='CNN':
-        p = {'rotation': range(5)}
+    elif args.exp_type =='amf_sweep':
+        p = {'P_fa':[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
+             'rotation':[1,2,3,4,5,6,7,8,9,10],
+             'target':[False,True]}
     else:
         assert False, "Unrecognized exp_type"
 
@@ -173,7 +175,7 @@ def generate_fname(args, params_str):
         alg_str ='%s_'%args.algorithm
 
     # Put it all together, include a %s for each included string or argument
-    return "%s/%s%s%s%s_%s%s"%(args.results_path,
+    return "%s/%s%s%s%0.4f_%s%s"%(args.results_path,
                                         experiment_type_str, label_str,alg_str, args.P_fa, target_str, rot_str)
 
 
@@ -441,10 +443,11 @@ def execute_exp(args=None):
         for i in range(len(data_ss) if args.max_test is None else args.max_test): 
             thname = args.th_name
             thname_0, thname_1 = thname.rsplit('*')
-            th_location = '%s%s_%s%s'%(thname_0,args.algorithm,args.P_fa,thname_1)
+            th_location = '%s%s_%0.4f%s'%(thname_0,args.algorithm,args.P_fa,thname_1)
             thdata = scipy.io.loadmat(th_location)
-            thresh = thdata.get("thresholds")
-            det = np.asarray(cog.cogDetector(args.algorithm, z_full[i], p, S[i,:,:], thresh[0,0]))
+            thresh = thdata.get("TH_lst")
+            
+            det = np.asarray(cog.cogDetector(args.algorithm, z_full[i], p, S[i,:,:], np.max(thresh)))
             FA_test = FA_test+det 
             
             if (args.verbose>=1):
