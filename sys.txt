@@ -1,5 +1,4 @@
---exp_type=sys_sweep
---label=K
---data=./datasets/clutter_final_K_short.mat
---partition=200
+--exp_type=sys_sweep_SIR_10
+--label=G
+--data=./datasets/clutter_final_G_SIR_10.mat
 --model_name=./models/THML_*Dense200_50_model
