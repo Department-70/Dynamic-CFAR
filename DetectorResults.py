@@ -13,13 +13,20 @@ import re
 import numpy as np
 
 directory = "./results/"
-data_name="*_sweep_*of10_results.mat"
+data_name="*_sweep_*of*_results.mat"
 
 files = fnmatch.filter(os.listdir(directory), data_name)
-flist = data_name.rsplit('*',2)
+flist = data_name.rsplit('*',3)
 #Structure of data:
 # [data_runs, FA_CD, FA_gauss]
 count = {"sys_G_0.001":np.zeros(3)}
+sysG = {0.0001: 0}
+sysK = {0.0001: 0}
+sysP = {0.0001: 0}
+amfG = {0.0001: 0}
+amfK = {0.0001: 0}
+amfP = {0.0001: 0}
+
 for fi in files:
     if ("no_tgt" in fi):
         full_f = '%s%s'%(directory, fi)
