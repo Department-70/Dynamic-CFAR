@@ -12,8 +12,14 @@ count=0
 limit="${#array[@]} "
 while [ $count -lt $limit ] 
 do
+	
 	cur=$(($count+$2))
 	count=$(($3+$count))
+	if [[ -f "kill.txt" ]]; 
+	then
+		echo "Killing runs ${array[$cur]} onword. If this was a mistake, please remove kill.txt, and rerun"
+		exit 1
+	fi
 	echo "Controller running on ${array[$cur]}"
 	python System_Parser_SC.py @sys.txt --exp_index "${array[$cur]}"
 	
