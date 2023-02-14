@@ -20,6 +20,7 @@ files = fnmatch.filter(os.listdir(directory), data_name)
 flist = data_name.rsplit('*',2)
 #Structure of data:
 # [data_runs, FA_CD, FA_gauss]
+
 count = {}
 for fi in files:          
         full_f = '%s%s'%(directory, fi)

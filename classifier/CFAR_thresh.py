@@ -195,7 +195,7 @@ def exp_type_to_hyperparameters(args):
         p=None
     elif args.exp_type =='THML':
         
-        p = {'PFA':[0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
+        p = {'PFA':[.00012,.000145,.00017,.00024,.000345,.0012,.00145,.0017,.0024,.00345,.012,.0145,.017,.024,.0345],
              'dist_type':['K','P'],
              'range':['L','M','H']}
     elif args.exp_type =='CNN':
@@ -314,9 +314,9 @@ def generate_fname(args, params_str):
         dropout_str = dropout_str .replace('.','_') 
     # Label
     if args.label is None:
-        label_str = "%s_%s_%0.4f"%(args.dist_type,args.range,args.PFA)
+        label_str = "%s_%s_%0.5f"%(args.dist_type,args.range,args.PFA)
     else:
-        label_str = "%s_%s_%0.4f_%s"%(args.dist_type,args.range,args.PFA,args.label)
+        label_str = "%s_%s_%0.5f_%s"%(args.dist_type,args.range,args.PFA,args.label)
     # Conv dropout
     # if args.dropout_spatial is None:
     #     dropoutS_str = ''
@@ -406,7 +406,7 @@ def execute_exp(args=None):
     else:
         thname = args.th_data
         thname_0, thname_1 = thname.rsplit('*')
-        th_data = '%s%s_%s_%0.4f%s'%(thname_0,args.dist_type, args.range, args.PFA,thname_1)
+        th_data = '%s%s_%s_%0.5f%s'%(thname_0,args.dist_type, args.range, args.PFA,thname_1)
         TH = scipy.io.loadmat(th_data)
         call_label='TH_lst_%s%s'%(args.dist_type, args.range)
         label_mini = TH[call_label]

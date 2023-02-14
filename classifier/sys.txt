@@ -1,0 +1,5 @@
+--verbose=2
+--exp_type=sys_sweep
+--label=PFA
+--data=./datasets/clutter_final_G.mat
+--max_test=100

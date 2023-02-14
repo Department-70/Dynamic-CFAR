@@ -90,13 +90,17 @@ def exp_type_to_hyperparameters(args):
     if args.exp_type is None:
         p=None
     elif args.exp_type =='sys_sweep':        
-        p = {'P_fa':[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
+        p = {'label':['G','K','P'],
+            'P_fa':[.00012,.000145,.00017,.00024,.000345,.0012,.00145,.0017,.0024,.00345,.012,.0145,.017,.024,.0345],
              'rotation':[1,2,3,4,5,6,7,8,9,10],
              'target':[False,True]}
     elif args.exp_type =='amf_sweep':
         p = {'P_fa':[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
              'rotation':[1,2,3,4,5,6,7,8,9,10],
              'target':[False,True]}
+    elif args.exp_type =='sys_sweep_SIR_10':
+        p = {'P_fa':[.00012,.000145,.00017,.00024,.000345,.0012,.00145,.0017,.0024,.00345,.012,.0145,.017,.024,.0345],
+             'rotation':[1,2,3,4,5,6,7,8,9,10]}    
     else:
         assert False, "Unrecognized exp_type"
 
@@ -175,7 +179,7 @@ def generate_fname(args, params_str):
         alg_str ='%s_'%args.algorithm
 
     # Put it all together, include a %s for each included string or argument
-    return "%s/%s%s%s%0.4f_%s%s"%(args.results_path,
+    return "%s/%s%s%s%0.5f_%s%s"%(args.results_path,
                                         experiment_type_str, label_str,alg_str, args.P_fa, target_str, rot_str)
 
 
@@ -271,9 +275,21 @@ def execute_exp(args=None):
     
     pulse_num = np.linspace(1,args.sample_len,args.sample_len)
     p = np.exp(-1j*2*np.pi*pulse_num*args.f_d*args.PRI)
-    
-    
-    
+    if args.label == 'G':
+        args.data = './datasets/clutter_final_G.mat'
+    elif  args.label == 'K':
+        args.data = './datasets/clutter_final_K_short.mat'
+    elif args.label == 'P':
+        args.data = './datasets/clutter_final_P.mat'
+    else:
+        print('Label does not match data')
+        return
+    if args.P_fa >0.01:
+        args.partition = 200
+    elif  args.P_fa >0.001:
+        args.partition = 50
+    else:
+        args.partition = 10
         
     # Load in our data and format it as necessary.
     # Note depending on the file you are loading defines the dimensions of the data
@@ -320,12 +336,12 @@ def execute_exp(args=None):
 
             thmodel = args.model_name
             thmodel_0, thmodel_1 = thmodel.rsplit('*')
-            model_th1 = '%s%s_%s_%0.4f%s'%(thmodel_0,'K','L',args.P_fa,thmodel_1)
-            model_th2 = '%s%s_%s_%0.4f%s'%(thmodel_0,'K','M',args.P_fa,thmodel_1)
-            model_th3 = '%s%s_%s_%0.4f%s'%(thmodel_0,'K','H',args.P_fa,thmodel_1)
-            model_th4 = '%s%s_%s_%0.4f%s'%(thmodel_0,'P','L',args.P_fa,thmodel_1)
-            model_th5 = '%s%s_%s_%0.4f%s'%(thmodel_0,'P','M',args.P_fa,thmodel_1)
-            model_th6 = '%s%s_%s_%0.4f%s'%(thmodel_0,'P','H',args.P_fa,thmodel_1)
+            model_th1 = '%s%s_%s_%0.5f%s'%(thmodel_0,'K','L',args.P_fa,thmodel_1)
+            model_th2 = '%s%s_%s_%0.5f%s'%(thmodel_0,'K','M',args.P_fa,thmodel_1)
+            model_th3 = '%s%s_%s_%0.5f%s'%(thmodel_0,'K','H',args.P_fa,thmodel_1)
+            model_th4 = '%s%s_%s_%0.5f%s'%(thmodel_0,'P','L',args.P_fa,thmodel_1)
+            model_th5 = '%s%s_%s_%0.5f%s'%(thmodel_0,'P','M',args.P_fa,thmodel_1)
+            model_th6 = '%s%s_%s_%0.5f%s'%(thmodel_0,'P','H',args.P_fa,thmodel_1)
         
         
         #Load in the threshold setting models.
