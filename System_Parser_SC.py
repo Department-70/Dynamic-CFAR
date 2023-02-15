@@ -70,9 +70,6 @@ def create_parser():
     parser.add_argument('--model_thresh3', type=str, default='./models/K_44_Dense1000_200_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
     parser.add_argument('--model_original', action='store_true', help='Flag to run original models')
     parser.add_argument('--model_final', type=str, default='./models/G_GF4_Dense500_50_drop_0_100_LR_0_000100_model', help='File path to a threshold model')
-
-    parser.add_argument('--alg', type=str, default='glrt', help="Adaptive detection algorithm to use.")
-    parser.add_argument('--dist', type=str, default='gaussian', help="The clutter distribution to use.")
     
     
     return parser
@@ -95,12 +92,23 @@ def exp_type_to_hyperparameters(args):
              'rotation':[1,2,3,4,5,6,7,8,9,10],
              'target':[False,True]}
     elif args.exp_type =='amf_sweep':
-        p = {'P_fa':[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
+        p = {'label':['G','K','P'],
+            'P_fa':[.00012,.000145,.00017,.00024,.000345,.0012,.00145,.0017,.0024,.00345,.012,.0145,.017,.024,.0345],
              'rotation':[1,2,3,4,5,6,7,8,9,10],
              'target':[False,True]}
     elif args.exp_type =='sys_sweep_SIR_10':
-        p = {'P_fa':[.00012,.000145,.00017,.00024,.000345,.0012,.00145,.0017,.0024,.00345,.012,.0145,.017,.024,.0345],
-             'rotation':[1,2,3,4,5,6,7,8,9,10]}    
+        p = {'label':['G','K','P'],
+            # 'P_fa':[0.0001,0.0002,0.0003,0.0004,0.0005,0.0006,0.0007,0.0008,0.0009,0.001,
+            #     0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.01,
+            #     0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
+             'P_fa':[.00012,.000145,.00017,.00024,.000345,.0012,.00145,.0017,.0024,.00345,.012,.0145,.017,.024,.0345],
+             'rotation':[1,2,3,4,5,6,7,8,9,10]}
+    elif args.exp_type =='amf_sweep_SIR_10':
+        p = {'label':['G','K','P'],
+             'P_fa':[0.0001,0.0002,0.0003,0.0004,0.0005,0.0006,0.0007,0.0008,0.0009,0.001,
+                     0.002,0.003,0.004,0.005,0.006,0.007,0.008,0.009,0.01,
+                     0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1],
+             'rotation':[1,2,3,4,5,6,7,8,9,10]}
     else:
         assert False, "Unrecognized exp_type"
 
@@ -259,6 +267,7 @@ def execute_exp(args=None):
     
     :param args: Argparse arguments
     '''
+    
     # Check the arguments
     if args is None:
         # Case where no args are given (usually, because we are calling from within Jupyter)
@@ -275,15 +284,27 @@ def execute_exp(args=None):
     
     pulse_num = np.linspace(1,args.sample_len,args.sample_len)
     p = np.exp(-1j*2*np.pi*pulse_num*args.f_d*args.PRI)
-    if args.label == 'G':
-        args.data = './datasets/clutter_final_G.mat'
-    elif  args.label == 'K':
-        args.data = './datasets/clutter_final_K_short.mat'
-    elif args.label == 'P':
-        args.data = './datasets/clutter_final_P.mat'
+    # print(args.label)
+    if ('SIR' in args.exp_type): 
+        if args.label == 'G':
+            args.data = './datasets/clutter_final_G_SIR_10.mat'
+        elif  args.label == 'K':
+            args.data = './datasets/clutter_final_K_SIR_10.mat'
+        elif args.label == 'P':
+            args.data = './datasets/clutter_final_P_SIR_10.mat'
+        else:
+            print('Label does not match data')
+            return
     else:
-        print('Label does not match data')
-        return
+        if args.label == 'G':
+            args.data = './datasets/clutter_final_G.mat'
+        elif  args.label == 'K':
+            args.data = './datasets/clutter_final_K_short.mat'
+        elif args.label == 'P':
+            args.data = './datasets/clutter_final_P.mat'
+        else:
+            print('Label does not match data')
+            return   
     if args.P_fa >0.01:
         args.partition = 200
     elif  args.P_fa >0.001:
@@ -319,7 +340,7 @@ def execute_exp(args=None):
             data_ss = data_ss[(args.rotation-1)*data_partition:,:]
             S = S[(args.rotation-1)*data_partition:,:,:]
             z_full =  z_full[(args.rotation-1)*data_partition:,:]  
-        
+    print('Exp: %s, index: %s, Label: %s'%(args.exp_type, args.exp_index, args.label))    
     if args.algorithm == 'glrt':
     
     #Load in the discriminator agent.
@@ -459,7 +480,7 @@ def execute_exp(args=None):
         for i in range(len(data_ss) if args.max_test is None else args.max_test): 
             thname = args.th_name
             thname_0, thname_1 = thname.rsplit('*')
-            th_location = '%s%s_%0.4f%s'%(thname_0,args.algorithm,args.P_fa,thname_1)
+            th_location = '%s%s_%0.5f%s'%(thname_0,args.algorithm,args.P_fa,thname_1)
             thdata = scipy.io.loadmat(th_location)
             thresh = thdata.get("TH_lst")
             
