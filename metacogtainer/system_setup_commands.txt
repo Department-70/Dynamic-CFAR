@@ -1,0 +1,21 @@
+docker volume create metacog-volume
+
+docker build -t metacog-base -f Dockerfile_base . ; 
+docker build -t metacog-discriminator -f Dockerfile_disc . ; 
+docker build -t metacog-evaluator -f Dockerfile_eval . ; 
+docker build -t metacog-fa-cd -f Dockerfile_fa_cd . ; 
+docker build -t metacog-fa-glrt -f Dockerfile_fa_glrt . ; 
+docker build -t metacog-fa-ideal -f Dockerfile_fa_ideal . ; 
+docker build -t metacog-results -f Dockerfile_results .
+
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-discriminator ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-evaluator ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-cd ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-glrt ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-ideal ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-resultsdocker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-discriminator ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-evaluator ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-cd ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-glrt ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-ideal ;
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-results

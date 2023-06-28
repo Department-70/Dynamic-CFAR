@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+
+# Start your image with a node base image
+FROM ubuntu:22.04
+
+# The current directory should act as the main application directory
+# WORKDIR /
+
+# install app dependencies
+RUN apt-get update && apt-get install -y python3 python3-pip
+#RUN apt install -y nvidia-cuda-toolkit nvidia-cuda-toolkit-gcc
+
+#RUN pip install nvidia-cudnn-cu11==8.6.0.163
+#RUN pip install numpy
+#RUN pip install tensorflow
+#RUN pip install keras
+#RUN pip install scipy
+#RUN pip install mat73
+#RUN pip install scikit-learn
+
+COPY ./requirements.txt /requirements.txt
+RUN pip install -r requirements.txt
