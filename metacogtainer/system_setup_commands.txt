@@ -1,4 +1,4 @@
-docker volume create metacog-volume
+docker volume create metacog-volume 
 
 docker build -t metacog-base -f Dockerfile_base . ; 
 docker build -t metacog-discriminator -f Dockerfile_disc . ; 
@@ -13,9 +13,24 @@ docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind m
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-cd ;
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-glrt ;
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-ideal ;
-docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-resultsdocker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-discriminator ;
-docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-evaluator ;
-docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-cd ;
-docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-glrt ;
-docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-fa-ideal ;
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-results
+
+# These terminal commands are used to set up, build, and run the system of Docker containers
+# Once you have docker installed, you can run the above commands in blocks (1st, 2nd, 3rd)
+
+# The first line creates a Volume for the containers to store files in.
+# 	A Volume is a hidden file system that containers can be attached to for long term storage
+# 	Without this, files would be isolated after a container runs, and could not be used in other containers
+
+# The second block of commands builds the Docker Images, this is basically compiling the code
+#	-t metacog-base : This specifies a 'tag' for the Image that acts as a name
+# 	-f Dockerfile_base . : This specifies the configuration file and its location
+#	If files are changed, the Images need to be rebuilt
+# 	A Docker Image is like an Operating System and a Container is similar to an instance of the OS running
+#	You build Images that are run in Containers, the Image configuration is specified in Dockerfiles
+
+# The third block of commands runs the newly built Images 
+# 	--mount type=volume : this attaches the Volume we created to the container
+#	source="metacog-volume" : this specifies the name of the container
+# 	target=/app/docker_bind : this is where the Volume files are stored in the containers
+# 	Because we are attaching the same Volume to all the containers, they can access shared files
