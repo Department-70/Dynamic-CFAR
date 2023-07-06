@@ -144,7 +144,6 @@ data/
 
 results/
 classifier/results/
-models/
 classifier/models/
 classifier/THdata/
 Oscer Results/
