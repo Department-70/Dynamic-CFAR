@@ -3,7 +3,8 @@
 # Start your image with a node base image
 FROM metacog-base
 
+COPY ./Datasets /Datasets
+COPY ./Models/Model4 /
 COPY ./Args_Class_Module.py /Args_Class_Module.py
-COPY ./Containers/Results /
 
-CMD ["python3", "./Docker_results.py"]
+CMD ["python3", "./Model-4.py"]

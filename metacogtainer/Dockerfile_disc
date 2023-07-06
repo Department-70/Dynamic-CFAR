@@ -3,9 +3,6 @@
 # Start your image with a node base image
 FROM metacog-base
 
-# The current directory should act as the main application directory
-# WORKDIR /Containers/Discriminator
-
 COPY ./Containers/Discriminator /
 COPY ./Datasets /Datasets
 COPY ./Args_Class_Module.py /Args_Class_Module.py
