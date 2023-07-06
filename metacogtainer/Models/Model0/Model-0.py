@@ -60,6 +60,6 @@ FA_cd = np.array([FA_cd])
 FA_glrt = np.array([FA_glrt])
 
 savetxt('/app/docker_bind/FA_cd.csv', FA_cd, delimiter=',')
-savetxt('/app/docker_bind/FA_cd.csv', FA_glrt, delimiter=',')
+savetxt('/app/docker_bind/FA_glrt.csv', FA_glrt, delimiter=',')
 
 #print("Model 6 CD:",FA_cd[0])
