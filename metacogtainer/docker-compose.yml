@@ -1,0 +1,170 @@
+version: '1'
+
+# services specifies a list of containers
+services: 
+  # base is the name of the container
+  base:
+    # build specifies how the image is built the container runs on
+    # context is the file location of the dockerfile
+    # dockerfile is the name of the dockerfile
+    build:
+      context: ./
+      dockerfile: Dockerfile-base
+    # this is the name of the image, it checks for it to see if it is already built
+    image: metacog-base
+    # volume is the storage location of shared file
+    # metacog-volume is the name
+    # /app/docker_bind is the directory
+    volumes:
+         - metacog-volume:/app/docker_bind
+
+  # configures the discriminator container
+  discriminator:
+    build:
+      context: ./
+      dockerfile: Dockerfile-disc
+    image: metacog-discriminator
+    volumes:
+         - metacog-volume:/app/docker_bind
+    # waits for the base to be built in order to run the discriminator
+    depends_on:
+      base:
+        condition: service_completed_successfully
+        
+  # configures the evaluator container
+  evaluator:
+    build:
+      context: ./
+      dockerfile: Dockerfile-eval
+    image: metacog-evaluator
+    volumes:
+         - metacog-volume:/app/docker_bind
+    # waits for the discriminator to be built in order to run the evaluator
+    depends_on:
+      discriminator:
+        condition: service_completed_successfully
+  
+  # All Models are run in parallel after the evaluator finishes
+  
+  # configures the model-0 container
+  model-0:
+    build:
+      context: ./
+      dockerfile: Model0_dockerfile
+    image: model-0
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully
+
+  # configures the model-1 container
+  model-1:
+    build:
+      context: ./
+      dockerfile: Model1_dockerfile
+    image: model-1
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully
+
+  # configures the model-2 container
+  model-2:
+    build:
+      context: ./
+      dockerfile: Model2_dockerfile
+    image: model-2
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully
+
+  # configures the model-3 container
+  model-3:
+    build:
+      context: ./
+      dockerfile: Model3_dockerfile
+    image: model-3
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully
+
+  # configures the model-4 container
+  model-4:
+    build:
+      context: ./
+      dockerfile: Model4_dockerfile
+    image: model-4
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully
+
+  # configures the model-5 container
+  model-5:
+    build:
+      context: ./
+      dockerfile: Model5_dockerfile
+    image: model-5
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully
+  
+  # configures the model-6 container
+  model-6:
+    build:
+      context: ./
+      dockerfile: Model6_dockerfile
+    image: model-6
+    volumes:
+         - metacog-volume:/app/docker_bind
+    depends_on:
+      evaluator:
+        condition: service_completed_successfully 
+  
+  # configures the results container
+  results:
+    build:
+      context: ./
+      dockerfile: Dockerfile-results
+    image: metacog-results
+    volumes:
+         - metacog-volume:/app/docker_bind
+    # waits until all of the models have finished running to run the results container
+    depends_on:
+      model-0:
+        condition: service_completed_successfully
+      model-1:
+        condition: service_completed_successfully
+      model-2:
+        condition: service_completed_successfully
+      model-3:
+        condition: service_completed_successfully
+      model-4:
+        condition: service_completed_successfully
+      model-5:
+        condition: service_completed_successfully
+      model-6:
+        condition: service_completed_successfully
+
+# volumes specifies a list of volumes (file storage systems)
+volumes:
+  # metacog-volume is the name of the volume the containers use
+  metacog-volume: {}
+  
+# ***************
+# This sets up the correct runtime order of the containers. 
+# The base is created, 
+# Then the discriminator runs once it is done,
+# Then the evaluator runs once the discriminator has finished, 
+# Next all seven models run in parallel once the evaluator is done,
+# Lastly, the results gathers the output of all seven models once all have finished
+# ***************

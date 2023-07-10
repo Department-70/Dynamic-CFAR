@@ -9,13 +9,13 @@ import Cognitive_Detector as cog
 import os.path
 
 
-MODEL_NUMBER = 2
+MODEL_NUMBER = 3
 
 
 args=Args_Class_Module.Args_Class() # Args Configuration File
 
-model_thresh2 = tf.keras.models.load_model(args.model_thresh2, compile=False) # Model 2 
-model_thresh2.compile()
+model_thresh3 = tf.keras.models.load_model(args.model_thresh3, compile=False) # Model 3 
+model_thresh3.compile()
 
 
 
@@ -43,10 +43,11 @@ else:
 
 
 # Checks if values already exist for FA classes, GLRT is not used here because it only uses Model 0 / IDEAL is Model 1
-if os.path.isfile('/app/docker_bind/FA_cd.csv'):
-    FA_cd = loadtxt('/app/docker_bind/FA_cd.csv', delimiter=',')
-else:
-    FA_cd = 0
+#if os.path.isfile('/app/docker_bind/FA_cd.csv'):
+#   FA_cd = loadtxt('/app/docker_bind/FA_cd.csv', delimiter=',')
+#else:
+#   FA_cd = 0
+FA_cd=0
 
 
 
@@ -54,16 +55,19 @@ else:
 
 # Goes through the necessary iteration and runs the runDet function code
 for i in range(len(data_ss) if args.max_test is None else args.max_test):
-    max_disc = max_disc_list[i] 
+    max_disc = max_disc_list[i]
     if max_disc == MODEL_NUMBER:
         temp = np.expand_dims(data_ss[i,:],0) # Called in run det
-        model2_thresh = model_thresh2.predict(temp,verbose = 0) # Called in function 'one'
-        det = np.asarray(cog.cogDetector(args.algorithm, z_full[i], p, S[i,:,:], model2_thresh))
+        model3_thresh = model_thresh3.predict(temp,verbose = 0) # Called in function 'three'
+        det = np.asarray(cog.cogDetector(args.algorithm, z_full[i], p, S[i,:,:], model3_thresh))
         FA_cd = FA_cd + det
+
+if args.show_output is True:
+        print(FA_cd)
 
 # Data needs to be in 1D or 2D format to use savetxt, so these lines format the numbers
 FA_cd = np.array([FA_cd])
 
-savetxt('/app/docker_bind/FA_cd.csv', FA_cd, delimiter=',')
+savetxt('/app/docker_bind/FA_cd_model_3.csv', FA_cd, delimiter=',')
 
-#print("Model 2 CD:",FA_cd[0])
+#print("Model 3 CD:",FA_cd[0])

@@ -1,0 +1,15 @@
+7/7/2023 Ryan F - 
+Changed the setup script to be done through Docker Compose instead of the Python SDK.
+The models now also run in parallel, this is set up in the docker compose .yml file (Lesya's idea)
+The ./Models folder has been merged with the ./Containers folder for clarity. The dockerfiles for the model containers have been updated to reflect this
+The terminal output now generates a lot of error / warning messages for the TensorFlow version
+docker compose up -> starts the system // docker compose down -> stops the system
+docker compose up -d -> detaches the system (does not produce output directly), but runs slightly faster (about 90 seconds)
+
+7/10/2023 Ryan F -
+Containers are not built and left in memory now, Docker Compose reuses the same containers and deletes them when closed
+Files' values are reset on Model-0 container, so that results do not persist after system finishes
+Results Container only prints the FA Ideal if run_ideal=True in the Args Class Module
+Results Container now saves to metacog_results.csv in the format : (fa_cd, fa_glrt, fa_ideal)
+Added page to wiki on Notion (Modular Metacog - Setup / Running)
+Added txt version of wiki to folder : system_description.txt

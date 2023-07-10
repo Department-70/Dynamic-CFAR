@@ -4,7 +4,7 @@
 FROM metacog-base
 
 COPY ./Datasets /Datasets
-COPY ./Models/Model2 /
+COPY ./Containers/Model2 /
 COPY ./Args_Class_Module.py /Args_Class_Module.py
 
 CMD ["python3", "./Model-2.py"]

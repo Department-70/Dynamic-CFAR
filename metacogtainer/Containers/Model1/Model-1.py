@@ -62,10 +62,11 @@ FA_ideal = 0
 
 # Loading is commented out here, because it added to previous run totals, FA_cd is initialized in Model 0
 
-if os.path.isfile('/app/docker_bind/FA_cd.csv'):
-   FA_cd = loadtxt('/app/docker_bind/FA_cd.csv', delimiter=',')
-else:
-   FA_cd = 0
+#if os.path.isfile('/app/docker_bind/FA_cd.csv'):
+#   FA_cd = loadtxt('/app/docker_bind/FA_cd.csv', delimiter=',')
+#else:
+#   FA_cd = 0
+FA_cd=0
 
 
 
@@ -86,7 +87,7 @@ for i in range(len(data_ss) if args.max_test is None else args.max_test):
 FA_cd = np.array([FA_cd])
 FA_ideal = np.array([FA_ideal])
 
-savetxt('/app/docker_bind/FA_cd.csv', FA_cd, delimiter=',')
+savetxt('/app/docker_bind/FA_cd_model_1.csv', FA_cd, delimiter=',')
 savetxt('/app/docker_bind/FA_ideal.csv', FA_ideal, delimiter=',')
 
 #print("Model 1 Ideal:",FA_ideal[0])
