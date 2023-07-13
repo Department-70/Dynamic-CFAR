@@ -29,7 +29,10 @@ Implemented Local Docker Image access in Kubernetes
 	Change kubectl context to Docker Desktop to : kubectl config use-context docker-desktop
 Went through basic Kubernetes tutorials to learn how the application works
 
-7/13/2023 Ryan F (Morning) - 
+7/13/2023 Ryan F - 
 Created documentation on the Kubernetes Metacog Job
 Added comments to the YAML file
 Looking into ways to improve the system, maybe creating a simple website hosting locally that displays the results of the metacog system?
+Downloaded D70 Powerpoint Template, have not started yet though
+Implemented parallel process in Kubernetes metacog job -> runtime went from about four minutes to two and a half
+    ^ metacog-results will cause error, as it will not find file, but will restart until model-0 through model-6 finish and then execute correctly
