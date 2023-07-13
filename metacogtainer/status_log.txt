@@ -13,3 +13,23 @@ Results Container only prints the FA Ideal if run_ideal=True in the Args Class M
 Results Container now saves to metacog_results.csv in the format : (fa_cd, fa_glrt, fa_ideal)
 Added page to wiki on Notion (Modular Metacog - Setup / Running)
 Added txt version of wiki to folder : system_description.txt
+
+7/11/2023 Ryan F -
+Working on converting Docker Compose to run in Kubernetes.
+Learning how to use Argo Workflows to implement a Directed Acyclic Graph (DAG) within Kubernetes
+Running into issues on pulling images locally.
+Looking into local kubernetes docker registry and authentication.
+Going back to try and run a single pod (metacog-discriminator) in base kubernetes
+
+7/12/2023 Ryan F -
+Created a local docker registry and pushed the images to a folder - Not a good solution
+Learning how to make a Directed Acyclic Graph, for running containers in a specified order using Dependencies - Did not work as of today
+Implemented Local Docker Image access in Kubernetes
+	Activate Kubernetes in Docker Desktop
+	Change kubectl context to Docker Desktop to : kubectl config use-context docker-desktop
+Went through basic Kubernetes tutorials to learn how the application works
+
+7/13/2023 Ryan F (Morning) - 
+Created documentation on the Kubernetes Metacog Job
+Added comments to the YAML file
+Looking into ways to improve the system, maybe creating a simple website hosting locally that displays the results of the metacog system?

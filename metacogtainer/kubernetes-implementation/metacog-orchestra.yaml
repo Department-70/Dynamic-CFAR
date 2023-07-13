@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: metacog-job
+spec:
+  template:
+    metadata:
+      name: metacog-pod
+    spec:
+      restartPolicy: OnFailure # Restarts a container when it fails
+      initContainers: # These initContainers are run prior to the main container, this can be used to run the containers sequentially
+      - name: base
+        image: metacog-base
+        imagePullPolicy: Never # This means it will not look for the images on Docker Hub (The online one), and instead use local Images
+        volumeMounts:
+        - name: metacog-volume # Uses the metacog-volume file storage
+          mountPath: /app/docker_bind # The folder in the volume where files are saved and loaded from
+
+      - name: discriminator
+        image: metacog-discriminator
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: evaluator
+        image: metacog-evaluator
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-0
+        image: model-0
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-1
+        image: model-1
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-2
+        image: model-2
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-3
+        image: model-3
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-4
+        image: model-4
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-5
+        image: model-5
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      - name: model-6
+        image: model-6
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+
+      containers: # These are run after the init containers
+      - name: metacog-results
+        image: metacog-results
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: metacog-volume
+          mountPath: /app/docker_bind
+      
+      volumes: # Specifies a volume that can be mounted to containers to share files
+        - name: metacog-volume
+          emptyDir: {}
