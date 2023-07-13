@@ -1,11 +1,11 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: metacog-job
+  name: metacog
 spec:
   template:
     metadata:
-      name: metacog-pod
+      name: metacog
     spec:
       restartPolicy: OnFailure # Restarts a container when it fails
       initContainers: # These initContainers are run prior to the main container, this can be used to run the containers sequentially
