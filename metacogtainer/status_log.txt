@@ -36,3 +36,6 @@ Looking into ways to improve the system, maybe creating a simple website hosting
 Downloaded D70 Powerpoint Template, have not started yet though
 Implemented parallel process in Kubernetes metacog job -> runtime went from about four minutes to two and a half
     ^ metacog-results will cause error, as it will not find file, but will restart until model-0 through model-6 finish and then execute correctly
+
+7/14/2023 Ryan F -
+Working on presentation for the overall project. "Reliable Modular Systems"
