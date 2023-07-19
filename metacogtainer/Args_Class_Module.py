@@ -1,5 +1,7 @@
+# Used for calculating P_fa with power function
 import numpy as np
 
+# Implementation of the original argument parser as a Class File
 class Args_Class:
     def __init__(self, 
     exp_index=None, 

@@ -39,3 +39,6 @@ Implemented parallel process in Kubernetes metacog job -> runtime went from abou
 
 7/14/2023 Ryan F -
 Working on presentation for the overall project. "Reliable Modular Systems"
+
+7/19/2023 Ryan F -
+Adding more comments to the dockerfiles and python scripts

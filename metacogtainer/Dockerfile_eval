@@ -1,10 +1,19 @@
 # syntax=docker/dockerfile:1
 
-# Start your image with a node base image
+# Inherits from the metacog-base Docker Image.
 FROM metacog-base
 
+# Copies the specific container folder (Evaluator) in the main directory on your computer to the Docker Container's main folder.
 COPY ./Containers/Evaluator /
+# Copies the Datasets folder on your computer to the Datasets folder in the Docker Container.
 COPY ./Datasets /Datasets
+# Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
 COPY ./Args_Class_Module.py /Args_Class_Module.py
 
+# Runs the specific Evaluator code segment from the Dynamic-CFAR algorithm
+#      specified in the corresponding Python Script.
+# This file was copied in the first COPY statement that collects the whole Evaluator folder.
+# This reads in the distribution_tensors.csv that was output by the Discriminator,
+#       and outputs a new file called max_disc_list.csv which is currently the argmax of each
+#       probability list (the element with the highest value).
 CMD ["python3", "./Docker_Evaluator.py"]

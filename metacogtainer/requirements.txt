@@ -3,5 +3,3 @@ tensorflow
 keras
 scipy
 mat73
-scikit-learn
-docker

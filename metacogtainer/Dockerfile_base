@@ -1,14 +1,19 @@
 # syntax=docker/dockerfile:1
 
-# Start your image with a node base image
+# Download Linux Ubuntu as the operating system.
 FROM ubuntu:22.04
 
-# install app dependencies
+# Install updates and install Python.
 RUN apt-get update
 RUN apt-get install -y python3 python3-pip
 
+# Optional, install Cuda if GPU is needed (Model Training).
 #RUN apt install -y nvidia-cuda-toolkit nvidia-cuda-toolkit-gcc
 #RUN pip install nvidia-cudnn-cu11==8.6.0.163
 
+# Moves the file from your computer into the Docker Container (they are isolated).
 COPY ./requirements.txt /requirements.txt
+
+# Using the requirements file, which is a list of libraries needed to run the Python scripts,
+#     this command automatically installs all the requirements.
 RUN pip install -r requirements.txt

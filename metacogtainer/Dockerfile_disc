@@ -1,10 +1,19 @@
 # syntax=docker/dockerfile:1
 
-# Start your image with a node base image
+# Inherits from the metacog-base Docker Image.
 FROM metacog-base
 
+# Copies the specific container folder (Discriminator) in the main directory on your computer to the Docker Container's main folder.
 COPY ./Containers/Discriminator /
+# Copies the Datasets folder on your computer to the Datasets folder in the Docker Container.
 COPY ./Datasets /Datasets
+# Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
 COPY ./Args_Class_Module.py /Args_Class_Module.py
 
+# Runs the specific Discriminator code segment from the Dynamic-CFAR algorithm
+#      specified in the corresponding Python Script.
+# This file was copied in the first COPY statement that collects the whole Discriminator folder.
+# This reads in the Data file specified by the Args Class and outputs distribution_tensors.csv,
+#       which is the probability list for each data point corresponding to the likelihood
+#       of each radar distribution.
 CMD ["python3", "./Docker_Discriminator.py"]
