@@ -1,6 +1,10 @@
 # syntax=docker/dockerfile:1
 
-# The main/first Dockerfile
+### label: metacog-base
+
+## The main/first Dockerfile: 
+#   install: Linux (ubuntu:22.04), python3, pip,and all needed libraries
+##
 
 # Dockerfile must start with a FROM instruction. 
 # Download Linux Ubuntu as the operating system.

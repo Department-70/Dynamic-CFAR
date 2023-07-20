@@ -1,13 +1,22 @@
 # syntax=docker/dockerfile:1
 
+### label: metacog-discriminator
+
+##  The second Dockerfile
+#
+##
+
 # Inherits from the metacog-base Docker Image.
+#   (Takes everything what metacog-base, 'Dockerfile_base', did and use it)
 FROM metacog-base
 
-# Copies the specific container folder (Discriminator) in the main directory on your computer to the Docker Container's main folder.
+# Copies 'Discriminator' (the container folder) from your computer (.\GitHub\Dynamic-CFAR\metacogtainer/Containers/Discriminator) to the Docker Container's main folder.
 COPY ./Containers/Discriminator /
-# Copies the Datasets folder on your computer to the Datasets folder in the Docker Container.
+
+# Copies 'Datasets' from your computer to the Datasets folder in the Docker Container.
 COPY ./Datasets /Datasets
-# Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
+
+# Copies 'Args_Class_Module.py' from your computer (.\GitHub\Dynamic-CFAR\metacogtainer/) to the main directory in the Docker Container.
 COPY ./Args_Class_Module.py /Args_Class_Module.py
 
 # Runs the specific Discriminator code segment from the Dynamic-CFAR algorithm
@@ -16,4 +25,6 @@ COPY ./Args_Class_Module.py /Args_Class_Module.py
 # This reads in the Data file specified by the Args Class and outputs distribution_tensors.csv,
 #       which is the probability list for each data point corresponding to the likelihood
 #       of each radar distribution.
+# There can only be one CMD instruction in a Dockerfile. If you list more than one CMD then only the last CMD will take effect.
+# Do not confuse RUN with CMD. RUN actually runs a command and commits the result; CMD does not execute anything at build time, but specifies the intended # # # command for the image.
 CMD ["python3", "./Docker_Discriminator.py"]
