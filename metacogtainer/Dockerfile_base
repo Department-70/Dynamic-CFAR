@@ -6,8 +6,8 @@
 #   operating sytem. 
 FROM ubuntu:22.04
 
-# the work directory
-WORKDIR /metacogtainer
+# the work directory (metacogtainer)
+WORKDIR ./
 
 ## updates and install Python
 # update Linux (ubuntu:22.04). 'apt-get' is only for ubuntu update. It updates any packeges that the system ubuntu:22.04 needs
