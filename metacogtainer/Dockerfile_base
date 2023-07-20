@@ -6,7 +6,7 @@
 #   operating sytem. 
 FROM ubuntu:22.04
 
-# the work directory (metacogtainer)
+# the work directory (metacogtainer) and Dockerfile_base is in this directory
 WORKDIR ./
 
 ## updates and install Python
