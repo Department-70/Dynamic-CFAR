@@ -1,14 +1,33 @@
 # syntax=docker/dockerfile:1
 
-# Start your image with a node base image
+# Start your image with a node base image. 
+
+# Dockerfile must start with a FROM instruction. 
+# Download Linux Ubuntu as the operating system.
+#   ubuntu:22.04 is an operating system. We can try with a different 
+#   operating sytem. 
 FROM ubuntu:22.04
 
-# install app dependencies
-RUN apt-get update
-RUN apt-get install -y python3 python3-pip
+# the work directory
+WORKDIR /metacogtainer
 
+## updates and install Python
+# update Linux (ubuntu:22.04). 'apt-get' is only for ubuntu update. It updates any packeges that the system ubuntu:22.04 needs
+RUN apt-get update
+
+# install python3 and pip for installing python3 libraries
+RUN apt-get install -y python3 python3-pip
+##
+
+## Optional, install Cuda if GPU is needed (Model Training).
 #RUN apt install -y nvidia-cuda-toolkit nvidia-cuda-toolkit-gcc
 #RUN pip install nvidia-cudnn-cu11==8.6.0.163
+##
 
+# Moves the file from your computer into the Docker Container (they are isolated).
+# The COPY instruction copies requirements.txt from the current dirrectory and adds them to the filesystem of the container under the same name
+#   COPY stays before this RUN because RUN use requirements.txt to install all libraries
 COPY ./requirements.txt /requirements.txt
+
+# install the libraries from requirements.txt (a list of libraries needed to run the Python scripts).
 RUN pip install -r requirements.txt

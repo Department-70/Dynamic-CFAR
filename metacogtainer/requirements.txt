@@ -1,7 +1,16 @@
+# libraries list to run a python scripts in the Docker containers
+
+# complex math functions
 numpy
+
+# for ML building AI models
 tensorflow
+
+# for building layers in the tensorflow models
 keras
+
+# loading matLab files
 scipy
+
+# loading matLab files when a file is too big
 mat73
-scikit-learn
-docker
