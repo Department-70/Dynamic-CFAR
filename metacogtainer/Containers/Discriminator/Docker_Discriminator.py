@@ -1,26 +1,41 @@
-#Load necessary packages.
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras import layers
-from keras.layers import Conv2D, Dense, LeakyReLU, InputLayer, Flatten , SpatialDropout2D
-from keras.layers import MaxPooling2D,Input, Dropout
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras import backend
-import scipy.io
-import mat73
+## Calculates: a probability of each distribution (Gaussian, K-Low, K-Medium, K-High, P-Low, P-Medium, P-High) to fit current data point (current data return)  
+#
+# Input: the Data file specified by the Args Class 
+#
+# Output: distribution_tensors.csv which is the probability list for each data point corresponding to the likelihood of each radar distribution.
 
-# NEW : for converting tensor to numpy array and saving to csv
+### Load necessary packages.
+# complex math functions
+import numpy as np
+# for ML building AI models
+import tensorflow as tf
+# for building layers in the tensorflow models
+from tensorflow.keras import layers
+# components for the models
+from keras.layers import Conv2D, Dense, LeakyReLU, InputLayer, Flatten, SpatialDropout2D, MaxPooling2D, Input, Dropout
+# iports models
+from tensorflow.keras.models import Sequential, Model
+# for the computational engine that performs the actual computations
+from tensorflow.keras import backend
+# loading matLab files
+import scipy.io
+# loading matLab files when a file is too big
+import mat73
+# for converting tensor to numpy array and saving to csv
 from numpy import savetxt
+# loading local file for configuration such as data location
 import Args_Class_Module
+###
 
 ######*****************************************************########
-# NEW : returns the softmax probabilities from the discriminator #
+# returns the softmax probabilities from the discriminator 
 #####*****************************************************########
 def get_disc_vector(data_ss, model_disc, test_num):
     
     temp = np.expand_dims(data_ss[test_num,:],0)
     disc_vector = model_disc.predict(temp,verbose = 0)
     return disc_vector
+    
     
 def execute_exp(args=None):
     '''
