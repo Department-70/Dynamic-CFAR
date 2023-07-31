@@ -42,3 +42,7 @@ Working on presentation for the overall project. "Reliable Modular Systems"
 
 7/19/2023 Ryan F -
 Adding more comments to the dockerfiles and python scripts
+
+7/20/2023 Ryan F -
+Testing system on large numbers of input data (500, 5000, 50000, Full)
+System reports high FA values, it may be an issue with the Python Code changes
