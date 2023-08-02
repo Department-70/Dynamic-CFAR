@@ -17,7 +17,7 @@ class Args_Class:
     PRI=1e-8, 
     f_d=2e7, 
     target=False, 
-    max_test=50, 
+    max_test=100, 
     discriminator='./classifier/ordered_a_Dense200_50_drop_0_100_LR_0_000100_model', 
     data='./Datasets/clutter_final_G.mat' , 
     model_thresh4='./classifier/P_14_Dense1000_200_50_drop_0_100_LR_0_000100_model', 

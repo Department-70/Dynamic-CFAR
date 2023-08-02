@@ -1,0 +1,96 @@
+Modular MetaCog 2.0 - System Overview
+
+To make the algorithm run in Docker using Containers, a few changes to the code have been made.
+
+Code Overview:
+
+To begin with a major change, the argument parser has been moved into a separate class file.
+This means that optional parameters can not be passed through the command line anymore, and are instead set in a configuration file.
+This can be found in 'Args_Class_Module.py' in the /Dynamic-CFAR/metacogtainer folder.
+A few more arguments have also been added for further customization, these include: run_ideal and show_output.
+run_ideal determines if the system will calculate the Ideal False Alarm rate, which is used for testing.
+When false, the system will not display output relating to this metric.
+The show_output variable sets whether or not each container will output its calculations when finished.
+This is a lot of text and will include the probability distributions for each data point from the discriminator and the highest probability from the evaluator.
+Because all the containers copy the same common file from the main directory, changes only need to be made once to affect all containers.
+However, when a change is made to a container, it needs to be built again for the changes to have any effect.
+This is because containers are isolated systems and are not connected to your host machine.
+
+Next, the code is segmented into various parts within different containers.
+
+-------------------------
+The first container, metacog-base, is key to the whole system.
+It installs Ubuntu as well as the required libraries found in ./requirements.txt
+This is vital as it ensurse that all of this data only needs to be installed once.
+The following containers all inherit from this base image, thus the code is not reinstalled.
+Due to this efficiency, building the containers is now much faster.
+Although this base does not execute any commands for the algorithm, it is essential to initialize common dependencies.
+***This container now also copies the data file and ArgsClassModule, the other no longer copy these files
+   This is done so that the data file only needs to be copied once, reduces the data storage space requirements by about 7/8x
+-------------------------
+The second container, metacog-discriminator, runs the initial processing of the specified data file.
+Currently, this data file is found in metacogtainer/Datasets/clutter_final_G.mat
+Metacog-discriminator currently calls a modified version of the 'runDet' function found in the original code.
+This simply calls the Discriminator model and captures the output of the Softmax classification before it is evaluated.
+This is a probability distribution for each data point.
+Because of difficulty saving this data from a Tensor to a csv file, the data is converted to a Numpy array before saving.
+This output is saved to 'distribution_tensors.csv'
+-------------------------
+The third container, metacog-evaluator, processes these probability distributions.
+Currently, it simply loads the data, and calculates the argmax for each array.
+Argmax finds the element in the array with the highest value.
+In this scenario, it finds the element with the highest probability.
+After doing so for each data point, the data is saved as a Numpy array with the argmax of each.
+This output is saved to 'max_disc_list.csv'
+-------------------------
+The fourth through tenth container (seven total) are the different threshold models used to predict specific thresholds.
+The image names are as follow: model-0, model-1, model-2, model-3, model-4, model-5, model-6.
+
+In each container the output file from the evaluator is loaded.
+For each data point in this file, there is a check to see if the selected model number is equal to the current model number.
+If so, the corresponding model is called to predict a corresponding threshold.
+For each data point where calculations are used, the current index and the predicted threshold are appended to an array.
+At the end of the loop through all data points, the list of index and thresholds is saved to the file: model_n_thresholds.csv
+
+This structure was designed so that all models can be run in parallel and still hold efficacy for mixed clutter and retain grouping of specific data points with their specific thresholds while isolated.
+-------------------------
+The last / eleventh container, metacog-glrt, gathers the thresholds and index from the seven model containers then calculates the glrt and outputs the number of false alarms to the terminal and saves to a results file.
+
+This container appends all the threshold/index arrays from the model containers
+Then it loops through each data point in the arrays and calculates detections using the index of each datapoint alongside its corresponding threshold.
+After looping over all the data, it outputs the number of false alarms to the terminal and saves to: false_alarms.csv
+
+*************************
+
+File Structure Overview:
+
+The main directory contains a containers folder, a datasets folder, the Args_Class_Module.py file, the image configuration files (Dockerfiles), and system guides.
+The containers folder contains files needed by specific containers.
+The datasets folder contains the common data file used by the containers.
+The Args_Class_Module.py is the common configuration file that has replaced the parser for command line argument.
+The Dockerfiles define how each Image is built before Containers are run.
+The system guide provides documentation on how the architecture works, how the code has changed, and also specific commands to run individual containers.
+The Base Image copies the common ./Datasets data file (clutter_final_G.mat currently), and the common Args_Class_Module.py file, thus all the following Images inherit these files.
+Each Image is built by copying the corresponding files from ./Containers.
+The container files contain the python scripts needed to run individual code segments, such as the discriminator, evaluator, models, and glrt.
+
+*************************
+
+Architecture Overview:
+
+This system of containers is partially sequential.
+First the metacog-base is built.
+Once this has finished, the metacog-discriminator is run to generate probability distributions.
+Then once this has been generated, the metacog-evaluator is run to process this data and generate argmax values.
+Now, with the argmax array, each model is run at the same time in parallel to process each data point and predict thresholds.
+Once all seven models have finished running, the metacog-glrt container is run to gather thesholds and data points, then calculate GLRT detections.
+
+*************************
+
+System Usage Overview:
+
+Everything can be done by simply running the following command in the terminal: docker compose up
+Note: If you do not have the images built before running this command it will build them for you.
+	  However, this method is much slower.
+	  It is recommended to build the images manually from the terminal prior to running the system for efficiency.
+	  The commands to build the images can be found in the metacogtainer/setup_commands_all.txt file (the second block of code).

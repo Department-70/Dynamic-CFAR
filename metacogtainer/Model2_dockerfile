@@ -3,10 +3,6 @@
 # Inherits from the metacog-base Docker Image.
 FROM metacog-base
 
-# Copies the Datasets folder on your computer to the Datasets folder in the Docker Container.
-COPY ./Datasets /Datasets
-# Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
-COPY ./Args_Class_Module.py /Args_Class_Module.py
 # Copies the specific container folder (Model2) in the main directory on your computer to the Docker Container's main folder.
 COPY ./Containers/Model2 /
 

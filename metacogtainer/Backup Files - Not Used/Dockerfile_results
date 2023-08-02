@@ -3,8 +3,6 @@
 # Inherits from the metacog-base Docker Image.
 FROM metacog-base
 
-# Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
-COPY ./Args_Class_Module.py /Args_Class_Module.py
 # Copies the specific container folder (Results) in the main directory on your computer to the Docker Container's main folder.
 COPY ./Containers/Results /
 

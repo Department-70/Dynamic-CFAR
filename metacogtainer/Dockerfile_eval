@@ -5,10 +5,6 @@ FROM metacog-base
 
 # Copies the specific container folder (Evaluator) in the main directory on your computer to the Docker Container's main folder.
 COPY ./Containers/Evaluator /
-# Copies the Datasets folder on your computer to the Datasets folder in the Docker Container.
-COPY ./Datasets /Datasets
-# Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
-COPY ./Args_Class_Module.py /Args_Class_Module.py
 
 # Runs the specific Evaluator code segment from the Dynamic-CFAR algorithm
 #      specified in the corresponding Python Script.

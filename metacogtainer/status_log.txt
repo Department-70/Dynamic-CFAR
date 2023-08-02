@@ -46,3 +46,31 @@ Adding more comments to the dockerfiles and python scripts
 7/20/2023 Ryan F -
 Testing system on large numbers of input data (500, 5000, 50000, Full)
 System reports high FA values, it may be an issue with the Python Code changes
+
+7/31/203 Ryan F -
+Working on splitting the GLRT calculations into its own container
+Split the model containers to only output threshold values
+Placed update into metacog-version2.py
+
+8/1/2023 Ryan F - 
+Removed data and arg COPY statements from all of the containers
+Added data and arg COPY statements into metacog-base
+So, data is only copied once just like the programming libraries, for efficiency
+Having trouble coding logic for selecting a threshold model. Either using docker to call a docker container, or logic inside a compose file.
+Ran into another issue, how to setup dependency for GLRT container, which model does it depend on?
+Implementing a naive solution, all the models boot in parallel and all of the non-necessary model exit
+Found a potential solution : https://github.com/nestybox/sysbox
+     -> However, it only runs on Linux
+Updated the python sdk script to automatically delete containers once they have finished running
+
+Fixed Docker Compose Implementation: you can still run 'docker compose up'
+The threshold prediction and glrt calculations have been moved to different containers
+The model-n containers output a list of [[datapoint_index, threshold], ...] elements
+The glrt calculator appends all of these lists from the model containers then calculates glrt for each element
+     For each element it looks at data[index] and uses the corresponding threshold
+
+8/2/2023 Ryan F -
+Updating documentation
+Cleaning code
+Uploading code to branch on GitHub
+

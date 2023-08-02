@@ -131,11 +131,11 @@ services:
         condition: service_completed_successfully 
   
   # configures the results container
-  results:
+  glrt:
     build:
       context: ./
-      dockerfile: Dockerfile-results
-    image: metacog-results
+      dockerfile: Dockerfile-glrt
+    image: metacog-glrt
     volumes:
          - metacog-volume:/app/docker_bind
     # waits until all of the models have finished running to run the results container

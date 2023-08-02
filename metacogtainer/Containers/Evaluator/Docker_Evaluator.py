@@ -1,4 +1,3 @@
-import tensorflow as tf
 import numpy as np
 from numpy import loadtxt
 from numpy import savetxt
@@ -29,6 +28,9 @@ for disc_vector in distribution_tensors:
      max_disc_list[i] = max_disc
      i = i + 1
 
+
 if args.show_output is True:
     print(max_disc_list)
+
+    
 savetxt('/app/docker_bind/max_disc_list.csv', max_disc_list, delimiter=',')

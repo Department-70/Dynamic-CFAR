@@ -38,7 +38,7 @@ docker build -t model-3 -f Model3_dockerfile . ;
 docker build -t model-4 -f Model4_dockerfile . ;
 docker build -t model-5 -f Model5_dockerfile . ;
 docker build -t model-6 -f Model6_dockerfile . ;
-docker build -t metacog-results -f Dockerfile_results . 
+docker build -t metacog-glrt-f Dockerfile_glrt . 
 
 (2) Run the following command:  docker compose up
 

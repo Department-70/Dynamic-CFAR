@@ -83,9 +83,9 @@ def execute_exp(args=None):
     for i in range(len(data_ss) if args.max_test is None else args.max_test):
         
         #####*****##### New : Converts resulting softmax tensor into Numpy Array for saving to file
-        temp_distribution = get_disc_vector(data_ss, model_disc, i)
-        proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
-        distribution_tensors[i] = tf.make_ndarray(proto_temp_distribution)
+       temp_distribution = get_disc_vector(data_ss, model_disc, i)
+       proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
+       distribution_tensors[i] = tf.make_ndarray(proto_temp_distribution)
 
     ######********************************************************########
     # NEW : Saves all the discriminator distributions to the given file #
@@ -93,8 +93,10 @@ def execute_exp(args=None):
 
     if args.show_output is True:
         print(distribution_tensors)
+
+    # Update name to probability_distribution.csv?
     savetxt('/app/docker_bind/distribution_tensors.csv', distribution_tensors, delimiter=',')
     
-# MAIN - Not a part of a function below
+# MAIN - Not a part of a function
 args = Args_Class_Module.Args_Class()
 execute_exp(args)

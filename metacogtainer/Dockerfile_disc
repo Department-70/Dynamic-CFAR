@@ -14,12 +14,6 @@ FROM metacog-base
 #   folder. After 'COPY ./Containers/Discriminator /', the main folder for Dockerfile_disc has everything fromS Discriminator (./Containers/Discriminator)
 COPY ./Containers/Discriminator /
 
-# Copies 'Datasets' from your computer to the Datasets folder in the Docker Container.
-COPY ./Datasets /Datasets
-
-# Copies 'Args_Class_Module.py' from your computer (.\GitHub\Dynamic-CFAR\metacogtainer/) to the main directory in the Docker Container.
-COPY ./Args_Class_Module.py /Args_Class_Module.py
-
 # Runs Docker_Discriminator.py that is in the main folder of the Dockerfile_disc container
 #   Docker_Discriminator.py reads from the Data file specified by the Args Class and outputs distribution_tensors.csv
 #       which is the probability list for each data point corresponding to the likelihood of each radar distribution.

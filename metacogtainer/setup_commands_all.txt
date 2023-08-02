@@ -11,7 +11,9 @@ docker build -t model-3 -f Model3_dockerfile . ;
 docker build -t model-4 -f Model4_dockerfile . ;
 docker build -t model-5 -f Model5_dockerfile . ;
 docker build -t model-6 -f Model6_dockerfile . ;
-docker build -t metacog-results -f Dockerfile_results . 
+docker build -t metacog-glrt -f Dockerfile_glrt . ;
+
+# docker build -t metacog-results -f Dockerfile_results . 
 
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-discriminator ;
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-evaluator ;
@@ -22,7 +24,9 @@ docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind m
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind model-4 ;
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind model-5 ;
 docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind model-6 ;
-docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-results
+docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-glrt ;
+
+# docker run --mount type=volume,source="metacog-volume",target=/app/docker_bind metacog-results
 
 # These terminal commands are used to set up, build, and run the system of Docker containers
 # Once you have docker installed, you can run the above commands in blocks (1st, 2nd, 3rd)
