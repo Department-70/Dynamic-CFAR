@@ -1,8 +1,12 @@
-## Calculates: a probability of each distribution (Gaussian, K-Low, K-Medium, K-High, P-Low, P-Medium, P-High) to fit current data point (current data return)  
+### Calculates: a probability of each distribution (Gaussian, K-Low, K-Medium, K-High, P-Low, P-Medium, P-High) to fit current data point (current data return)  
 #
-# Input: the Data file specified by the Args Class 
+## Input: the Data file specified by the Args Class 
+# data_ss is a data array
+# model_disc is a path to the model's discriminators
+# test_num is number of test that will run
+# disc_vector is a vector with the numbers each of which corresponds to certain distribution
 #
-# Output: distribution_tensors.csv which is the probability list for each data point corresponding to the likelihood of each radar distribution.
+## Output: distribution_tensors.csv which is the probability list for each data point corresponding to the likelihood of each radar distribution.
 
 ### Load necessary packages.
 # complex math functions
@@ -32,7 +36,11 @@ import Args_Class_Module
 #####*****************************************************########
 def get_disc_vector(data_ss, model_disc, test_num):
     
+    # add one dim for rows
     temp = np.expand_dims(data_ss[test_num,:],0)
+
+    # the data has passed through the model to predict the distribution 
+    #   that fit the data in temp
     disc_vector = model_disc.predict(temp,verbose = 0)
     return disc_vector
     
@@ -80,12 +88,12 @@ def execute_exp(args=None):
         distribution_tensors = np.zeros(shape=(len(data_ss), 7))
     
     #Run the data through the combined system.
-    for i in range(len(data_ss) if args.max_test is None else args.max_test):
+    for test_num in range(len(data_ss) if args.max_test is None else args.max_test):
         
         #####*****##### New : Converts resulting softmax tensor into Numpy Array for saving to file
-        temp_distribution = get_disc_vector(data_ss, model_disc, i)
+        temp_distribution = get_disc_vector(data_ss, model_disc, test_num)
         proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
-        distribution_tensors[i] = tf.make_ndarray(proto_temp_distribution)
+        distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution)
 
     ######********************************************************########
     # NEW : Saves all the discriminator distributions to the given file #
@@ -94,7 +102,9 @@ def execute_exp(args=None):
     if args.show_output is True:
         print(distribution_tensors)
     savetxt('/app/docker_bind/distribution_tensors.csv', distribution_tensors, delimiter=',')
-    
-# MAIN - Not a part of a function below
+
+
+### MAIN program
 args = Args_Class_Module.Args_Class()
 execute_exp(args)
+###
