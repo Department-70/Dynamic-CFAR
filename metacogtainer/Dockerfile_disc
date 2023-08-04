@@ -3,7 +3,7 @@
 ### label: metacog-discriminator
 
 ##  The second Dockerfile
-#       Reads the radar's returns and outputs the probability distributions for each radar returns (data point)
+#       Reads the radar's returns and outputs the probability distributions for each radar returns (data point).
 ##
 
 # Inherits from the metacog-base Docker Image.

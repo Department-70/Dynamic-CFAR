@@ -37,5 +37,5 @@ COPY ./requirements.txt /requirements.txt
 #   COPY stays before this RUN because RUN use requirements.txt to install all libraries
 COPY ./requirements.txt /requirements.txt
 
-# install the libraries from requirements.txt (a list of libraries needed to run the Python scripts).
+# install the libraries from requirements.txt (a list of libraries needed to run the Python scripts)
 RUN pip install -r requirements.txt
