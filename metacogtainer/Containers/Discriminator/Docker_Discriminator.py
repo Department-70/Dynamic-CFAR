@@ -44,17 +44,17 @@ def get_disc_vector(data_ss, model_disc, test_num):
     disc_vector = model_disc.predict(temp,verbose = 0)
     return disc_vector
     
-    
+######*****************************************************########
+# executes tests
+#####*****************************************************########    
 def execute_exp(args=None):
     '''
-    Execute Tests
-    
     :param args: Arg Class Module arguments
     ''' 
         
-    # Load in our data and format it as necessary.
+    # Loads in the data and formats it as necessary.
     # Note depending on the file you are loading defines the dimensions of the data
-    # The SIR_Sweep will have 3D and the normal data will have 
+    # The SIR_Sweep will have 3D and the normal data will have ?????
     try: 
         data = scipy.io.loadmat(args.data)               #Use this for small mat data files.
     except NotImplementedError:
@@ -80,7 +80,7 @@ def execute_exp(args=None):
     model_disc = tf.keras.models.load_model(args.discriminator)
 
     ######***************************************########
-    # NEW : Stores all the discriminator distributions #
+    # Stores all the discriminator distributions 
     #####***************************************########
     if args.max_test is not None:
         distribution_tensors = np.zeros(shape=(args.max_test, 7))
@@ -90,7 +90,7 @@ def execute_exp(args=None):
     #Run the data through the combined system.
     for test_num in range(len(data_ss) if args.max_test is None else args.max_test):
         
-        #####*****##### New : Converts resulting softmax tensor into Numpy Array for saving to file
+        # Converts resulting softmax tensor into Numpy Array for saving to file
         temp_distribution = get_disc_vector(data_ss, model_disc, test_num)
         proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
         distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution)
