@@ -80,9 +80,9 @@ def execute_exp(args=None):
     # Load in the discriminator agent. Load args.discriminator in model_disc
     model_disc = tf.keras.models.load_model(args.discriminator)
 
-    ######***************************************########
+    #---------------------------------------------------
     # Stores all the discriminator distributions 
-    #####***************************************########
+    #---------------------------------------------------
     if args.max_test is not None:
         distribution_tensors = np.zeros(shape=(args.max_test, 7))
     else:
@@ -96,9 +96,9 @@ def execute_exp(args=None):
         proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
         distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution)
 
-    ######********************************************************########
-    # NEW : Saves all the discriminator distributions to the given file #
-    #####********************************************************########
+    #---------------------------------------------------
+    # NEW : Saves all the discriminator distributions to the given file 
+    #---------------------------------------------------
 
     if args.show_output is True:
         print(distribution_tensors)
