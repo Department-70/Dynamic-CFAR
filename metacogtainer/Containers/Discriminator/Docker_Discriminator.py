@@ -97,7 +97,7 @@ def execute_exp(args=None):
         distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution)
 
     #---------------------------------------------------
-    # NEW : Saves all the discriminator distributions to the given file 
+    # Saves all the discriminator distributions to the given file 
     #---------------------------------------------------
 
     if args.show_output is True:
