@@ -1,10 +1,11 @@
 ### Calculates: a probability of each distribution (Gaussian, K-Low, K-Medium, K-High, P-Low, P-Medium, P-High) to fit current data point (current data return)  
 #
 ## Input: the Data file specified by the Args Class 
-# data_ss is a data array
+# data_ss is a data array with a reduse by one dim
 # model_disc is a path to the model's discriminators
 # test_num is number of test that will run
 # disc_vector is a vector with the numbers each of which corresponds to certain distribution
+# args is a parameter from Arg Class Module arguments
 #
 ## Output: distribution_tensors.csv which is the probability list for each data point corresponding to the likelihood of each radar distribution.
 
@@ -54,29 +55,29 @@ def execute_exp(args=None):
         
     # Loads in the data and formats it as necessary.
     # Note depending on the file you are loading defines the dimensions of the data
-    # The SIR_Sweep will have 3D and the normal data will have ?????
+    # The SIR_Sweep will have 3D and the normal data will have 2D
     try: 
-        data = scipy.io.loadmat(args.data)               #Use this for small mat data files.
+        # Use this for small mat data files.
+        data = scipy.io.loadmat(args.data)               
     except NotImplementedError:
+        # loading big matLab files
         data = mat73.loadmat(args.data)  
-        
+
+     # reduce dim by one size   
     data_ss = np.squeeze(data.get("data"))     
     
     #---------------------------------------------------
-    # NOTE TO SELF: JOE
-    # This is not where we are distinguishing between 3 vs 2 dimensions 
-    # 
-    # cut = only clutter, no target
-    # cut_target = has target in the data
-    # HERP DERP
+    # This is distinguishing between  
+    # cut = only clutter, no target (args.target = FAllS)
+    # and
+    # cut_target = has target in the data (args.target = TRUE)
     #---------------------------------------------------
-    if (args.target):
+    if (args.target): # args.target == TRUE
         z_full = np.squeeze(data.get("cut_target"))
-    else:
+    else: # args.target == FAllS
         z_full = np.squeeze(data.get("cut"))
     
-    
-    #Load in the discriminator agent.
+    # Load in the discriminator agent. Load args.discriminator in model_disc
     model_disc = tf.keras.models.load_model(args.discriminator)
 
     ######***************************************########
