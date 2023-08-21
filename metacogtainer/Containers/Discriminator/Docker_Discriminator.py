@@ -6,6 +6,10 @@
 # test_num is number of test that will run
 # disc_vector is a vector with the numbers each of which corresponds to certain distribution
 # args is a parameter from Arg Class Module arguments
+# args.max_test is the number of tests that run. If args.max_test is None that the whole data set will be trained.
+# 
+## Additional variables
+# numDist is the number of distributions: Gaussian, K-low, K-medium, K-high, P-low, P-medium, P-high 
 #
 ## Output: distribution_tensors.csv which is the probability list for each data point corresponding to the likelihood of each radar distribution.
 
@@ -52,6 +56,9 @@ def execute_exp(args=None):
     '''
     :param args: Arg Class Module arguments
     ''' 
+
+    # distribution number
+    numDist = 7
         
     # Loads in the data and formats it as necessary.
     # Note depending on the file you are loading defines the dimensions of the data
@@ -77,24 +84,26 @@ def execute_exp(args=None):
     else: # args.target == FAllS
         z_full = np.squeeze(data.get("cut"))
     
-    # Load in the discriminator agent. Load args.discriminator in model_disc
+    # Load the models in model_disc.  args.discriminator is the path where models are 
     model_disc = tf.keras.models.load_model(args.discriminator)
 
-    #---------------------------------------------------
-    # Stores all the discriminator distributions 
-    #---------------------------------------------------
+    #*****************************************************
+    # Stores all the probabilities of the discriminator distributions
     if args.max_test is not None:
-        distribution_tensors = np.zeros(shape=(args.max_test, 7))
-    else:
-        distribution_tensors = np.zeros(shape=(len(data_ss), 7))
+        # creates zeros array with args.max_test column and numDist rows
+        distribution_tensors = np.zeros(shape=(args.max_test, numDist))
+    else: # creates zeros array with the whole data set column and numDist rows
+        distribution_tensors = np.zeros(shape=(len(data_ss), numDist))
     
-    #Run the data through the combined system.
+    # Run the data through the combined system.
     for test_num in range(len(data_ss) if args.max_test is None else args.max_test):
         
         # Converts resulting softmax tensor into Numpy Array for saving to file
         temp_distribution = get_disc_vector(data_ss, model_disc, test_num)
         proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
         distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution)
+    
+    ##*****************************************************
 
     #---------------------------------------------------
     # Saves all the discriminator distributions to the given file 
