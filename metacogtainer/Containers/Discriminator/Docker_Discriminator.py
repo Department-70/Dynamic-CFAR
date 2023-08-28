@@ -95,24 +95,25 @@ def execute_exp(args=None):
     else: # creates zeros array with the whole data set column and numDist rows
         distribution_tensors = np.zeros(shape=(len(data_ss), numDist))
     
-    # Run the data through the combined system.
-    for test_num in range(len(data_ss) if args.max_test is None else args.max_test):
+    ## Converts resulting softmax tensor into Numpy Array for saving to file
+    for test_num in range(len(data_ss) if args.max_test is None else args.max_test): # Run the data through the combined system.
         
-        # Converts resulting softmax tensor into Numpy Array for saving to file
-        temp_distribution = get_disc_vector(data_ss, model_disc, test_num)
+        temp_distribution = get_disc_vector(data_ss, model_disc, test_num) # the softmax probabilities from the discriminator 
         proto_temp_distribution = tf.make_tensor_proto(temp_distribution)  # convert to numpy takes a prototensor as parameter
-        distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution)
-    
+        distribution_tensors[test_num] = tf.make_ndarray(proto_temp_distribution) # distribution's array that came from tensor
+        
+    ##
     ##*****************************************************
 
-    #---------------------------------------------------
+    #*****************************************************
     # Saves all the discriminator distributions to the given file 
-    #---------------------------------------------------
+
 
     if args.show_output is True:
         print(distribution_tensors)
-    savetxt('/app/docker_bind/distribution_tensors.csv', distribution_tensors, delimiter=',')
 
+    savetxt('/app/docker_bind/distribution_tensors.csv', distribution_tensors, delimiter=',')
+    ##*****************************************************
 
 ### MAIN program
 args = Args_Class_Module.Args_Class()
