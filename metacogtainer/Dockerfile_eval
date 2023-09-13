@@ -1,19 +1,33 @@
 # syntax=docker/dockerfile:1
 
+### label: metacog-evaluator
+
+##  The third Dockerfile
+#       Processes the probability distributions that came from Dockerfile_disc container.
+#           It loads the data, and calculates the argmax for each array.
+#           Argmax finds the element in the array with the highest value (the element with the highest probability).
+#           After doing so for each data point, the data is saved as a Numpy array with the argmax of each.
+#           This output is saved to 'max_disc_list.csv'
+##
+
 # Inherits from the metacog-base Docker Image.
+#   (Takes everything what metacog-base, 'Dockerfile_base', did and use it)
 FROM metacog-base
 
-# Copies the specific container folder (Evaluator) in the main directory on your computer to the Docker Container's main folder.
+# Copies the container folder Evaluator in the main directory on your computer to the Docker Container's main folder.
 COPY ./Containers/Evaluator /
+
 # Copies the Datasets folder on your computer to the Datasets folder in the Docker Container.
 COPY ./Datasets /Datasets
+
 # Copies the Args_Class_Module file from the main directory on your computer to the main directory in the Docker Container.
 COPY ./Args_Class_Module.py /Args_Class_Module.py
 
-# Runs the specific Evaluator code segment from the Dynamic-CFAR algorithm
+# Runs the Evaluator code segment from the Dynamic-CFAR algorithm
 #      specified in the corresponding Python Script.
 # This file was copied in the first COPY statement that collects the whole Evaluator folder.
 # This reads in the distribution_tensors.csv that was output by the Discriminator,
 #       and outputs a new file called max_disc_list.csv which is currently the argmax of each
 #       probability list (the element with the highest value).
+# Do not confuse RUN with CMD. RUN actually runs a command and commits the result; CMD does not execute anything at build time, but specifies the intended command for the image.
 CMD ["python3", "./Docker_Evaluator.py"]

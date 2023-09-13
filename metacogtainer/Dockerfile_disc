@@ -25,5 +25,5 @@ COPY ./Args_Class_Module.py /Args_Class_Module.py
 #       which is the probability list for each data point corresponding to the likelihood of each radar distribution.
 # python3 is the specification of how to run Docker_Discriminator.py
 # There can only be one CMD instruction in a Dockerfile. If you list more than one CMD then only the last CMD will take effect.
-#   Do not confuse RUN with CMD. RUN actually runs a command and commits the result; CMD does not execute anything at build time, but specifies the intended # #   command for the image.
+#   Do not confuse RUN with CMD. RUN actually runs a command and commits the result; CMD does not execute anything at build time, but specifies the intended command for the image.
 CMD ["python3", "./Docker_Discriminator.py"]
